@@ -1,0 +1,103 @@
+To add: 
+
+
+Technically Ala Cb-Ca too and this needs 15N decoupling
+K and maybe others need 15N decoupling in the indirect dimension for long TJ
+
+pl17 has generally been around 1000Hz for our stuff
+can we take pl17 out of the base calibration and put into autocal
+
+How do we now cite who has written it and against what date
+;"-DCT records t1 in a constant time manner"
+
+
+why bf1 not sf01 "cnst21=o1/bf1"
+
+
+O1P 		- Ct
+CNST22 		- CP
+CNST2 		- Jcc
+pl17		- 850Hz
+
+
+"d11=30m"
+"d12=15u"
+"d13=15u"
+       "pwc90_Ct=p11"
+       "pwc90_Cp=p13"
+       "pwc180_Ct=p15"
+       "pwc180_Cp=p16"
+       "pwc_dip=p17"
+       "pwd=p41"
+       "taua=1s/(cnst2*4.)"
+       "TC=1s/(cnst2*1.)"
+flopsytime
+l1
+ap_flg
+maxtd
+l11
+
+
+
+To Do:
+
+Check the not CT d0!
+Check maxTD calc
+Hard write warning on FLOPSYTIME?
+Hard write warning on amount of 2H decoupling!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ring Karen
+Physio
+Email Stuart
+
+Computer
+First sequences
+
+cecd_2d_lys_2H_ipap_600_dfh_v2
+
+0hn4!notagain!
+0hn4!notagain!
