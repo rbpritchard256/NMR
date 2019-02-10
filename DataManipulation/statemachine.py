@@ -25,9 +25,9 @@ class StateMachine:
     while True:
       (newState, cargo) = handler(cargo)
       if newState.upper() in self.endStates:
-        print("reached {}".format( newState))
-        break
+         break
       elif newState.upper() not in self.handlers:
         raise RuntimeError, "Invalid target {}".format(newState)
       else:
         handler = self.handlers[newState.upper()]
+    return cargo
