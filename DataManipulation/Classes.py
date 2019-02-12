@@ -33,7 +33,6 @@ class Molecule:
 
     def addAtom(self, a, val):
         # Adds Atom objects to a residue defined by its number in the sequence (val)
-        print('WARNING: Residue.addAtoms has an issue if there are any unassigned CSs')
         self.Residues[val].addAtom(a)
 
     def countAtoms(self): 
@@ -59,7 +58,16 @@ class Residue:
            self.Atoms[a].describe()
 
     def addAtom(self, a):
-        self.Atoms[a.name] = a
+        self.Atoms[a.name] = a    
+
+
+    def checkExists(self, atoms):
+        result = False
+        if len(self.Atoms) >0:
+            if set(atoms).issubset(self.Atoms.keys()):
+                result = True
+        return result
+                   
 
 class Atom:
     def __init__(self, name, atype, CS, CS_var=(float('NaN'),float('NaN'))):
@@ -70,3 +78,25 @@ class Atom:
 
     def describe(self):
         print('\t{}\t {}'.format(self.name, self.CS))
+
+
+class Correlation: 
+    def __init__(self, res1, res2, num1, num2, atype1, atype2, val1, val2):
+        self.res1 = res1
+        self.res2 = res2
+        self.num1 = num1
+        self.num2 = num2
+        self.atype1 = atype1
+        self.atype2 = atype2
+        self.val1 = val1
+        self.val2 = val2
+
+
+
+
+
+
+
+
+
+

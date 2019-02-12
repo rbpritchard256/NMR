@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from statemachine import StateMachine
 import os,sys
 from Classes import *
@@ -24,15 +26,16 @@ def open_file(f):
     molecule = Molecule()
     return ('read_lines', (f, fi, molecule))
 
-def read_lines((f, fi, molecule)):
+def read_lines(cargo):
     '''
     Goes through the file and directs to various functions depending on text/position in file.
     Extracts information to Molecule class object containing Residues and which contain Atoms
     '''
+    f, fi, molecule = cargo[0], cargo[1], cargo[2]
     r = ('end_reading', (f, fi,molecule))
     for line in fi:
         if 'NMR_STAR_version' in line: # check version, currently only supports 3.1
-            line = fi.next() # currently skips the detailed version
+            line = next(fi) # currently skips the detailed version
             version = get_info(line)
             if version != '3.1':
                 print("Closing.\nFile: '{}' is not NMR STAR version 3.1".format(f))
@@ -40,19 +43,20 @@ def read_lines((f, fi, molecule)):
         if '_Entity.Name' in line: # get molecule name
             molecule.name = get_info(line)
         if line.strip() == '_Entity.Polymer_seq_one_letter_code': # get sequence
-            fi.next()
+            next(fi)
             r = ('get_sequence', (f, fi, molecule))
             break
         if '_Entity.Polymer_author_seq_details' in line: # get any sequence notes
             molecule.seqNote = get_info(line)
         if line.strip() == '_Atom_chem_shift.Assigned_chem_shift_list_ID': # get CS
-            fi.next()
+            next(fi)
             r = ('get_CS', (f, fi, molecule))
             break
     return r
 
-def get_sequence((f,fi,molecule)): 
+def get_sequence(cargo): 
     # Imports the *single letter* sequence
+    f, fi, molecule = cargo[0], cargo[1], cargo[2]
     seq, inseq = '', True
     for line in fi:
         if line.strip() == ';':
@@ -65,8 +69,10 @@ def get_sequence((f,fi,molecule)):
     molecule.numRes= len(seq.strip())
     return ('read_lines',(f, fi, molecule))
         
-def get_CS((f,fi,molecule)): 
+def get_CS(cargo): 
     # Gets the CS for each atom
+    f, fi, molecule = cargo[0], cargo[1], cargo[2]
+    print('WARNING: Residue.addAtoms has an issue if there are any unassigned CSs')
     molecule.initialise() # create a list of residue objects, one for each residue in molecule.seq
     inCS = True
     c = 0
@@ -93,7 +99,8 @@ def get_info(line):
     return info
 
 
-def end_reading((f,fi,molecule)):
+def end_reading(cargo):
+    f, fi, molecule = cargo[0], cargo[1], cargo[2]
     print("Finished reading file: '{}'".format(f))
     return ('', (f,fi,molecule))
 
@@ -102,11 +109,10 @@ def empty_file(f):
     quit()
 
 def no_file(f):
-    print("Closing.\nFile: '{}' does not exist".format(f))
+    print("CLOSING: File: '{}' does not exist".format(f))
     quit()
 
-
-def bmrbParse(f): 
+def parseBMRB(f): 
     # This is the actual program
     m = StateMachine()
     m.add_state("Start", start)
@@ -115,8 +121,8 @@ def bmrbParse(f):
     m.add_state("get_sequence", get_sequence)
     m.add_state("get_CS", get_CS)
     m.add_state("end_reading", end_reading, end_state=1)
-    m.add_state("empty_file", empty_file, end_state=1)
-    m.add_state("no_file", no_file, end_state=1)
+    m.add_state("empty_file", empty_file)
+    m.add_state("no_file", no_file)
     m.set_start("Start")
     a = m.run(f)[2]
     return a
@@ -130,10 +136,8 @@ if __name__== "__main__":
     m.add_state("get_sequence", get_sequence)
     m.add_state("get_CS", get_CS)
     m.add_state("end_reading", end_reading, end_state=1)
-    m.add_state("empty_file", empty_file, end_state=1)
-    m.add_state("no_file", no_file, end_state=1)
+    m.add_state("empty_file", empty_file)
+    m.add_state("no_file", no_file)
     m.set_start("Start")
-    a = m.run('../26012_3.1')[2]
-    print(a.name)
-#    molecule.describe()
-
+    a = m.run('26012_3.1')[2]
+    a.describe()
