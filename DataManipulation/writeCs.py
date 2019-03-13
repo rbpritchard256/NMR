@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 f = args.filename
 o = args.output
-if o not in ['HNbb','HNall', 'HC', 'MeTROSY']:
+if o not in ['HNbb','HNall', 'HC', 'MeTROSY', 'HaCa']:
     sys.exit('CLOSING: Output (-o/--output) must be one of HN, HC, MeTROSY')
 
 def HNbb_peaks(molecule):
@@ -22,6 +22,15 @@ def HNbb_peaks(molecule):
             corr = Correlation(Dict.resDictRev[res.name], Dict.resDictRev[res.name], res.num, res.num, 'H', 'N', float(res.Atoms['H'].CS), float(res.Atoms['N'].CS))
             peakList.append(corr)
     return peakList
+
+def HaCa_peaks(molecule):
+    peakList=[]
+    for res in molecule.Residues:
+        if 'CA' in res.Atoms and 'HA' in res.Atoms:
+            corr = Correlation(Dict.resDictRev[res.name], Dict.resDictRev[res.name], res.num, res.num, 'H', 'C', float(res.Atoms['HA'].CS), float(res.Atoms['CA'].CS))
+            peakList.append(corr)
+    return peakList
+
 
 def MeTROSY_peaks(molecule):
     peakList=[]
