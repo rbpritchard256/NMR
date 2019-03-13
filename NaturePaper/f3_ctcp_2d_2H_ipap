@@ -15,13 +15,13 @@
 ; Set the following parameters
 ;   O1P    	to the average chemical shift of Ct
 ;   CNST22 	to the average chemical shift of Cp
-;   O4P    	to the average chemical shift of Dt (bonded to Ct)
-;   CNST42 	to the average chemical shift of Dp (bonded to Cp)
+;   O4P    	to the average chemical shift of Ht (bonded to Ct)
+;   CNST42 	to the average chemical shift of Hp (bonded to Cp)
 ;   CNST2  	to 1 bond 13C-13C coupling (36 Hz)
 ;   P11/ P13   	length of selective 90 pulses for Ct/Cp EBurp2 / EBurp2(tr)
 ;   P15/ P16   	length of selective 180 pulses for Ct/Cp ReBurp
-;   P41    	2H flanking pulses (@pl41)
-;   PL41   	power of 2H cwp decoupling (850Hz)
+;   PL17   	power of 2H cwp decoupling (850Hz)
+;   P41    	2H flanking pulses (@pl17)
 ;;
 ;-DAUTOCAL will calibrate the following from p1:
 ;   SPW11,12,13,14,15,16
@@ -70,7 +70,7 @@ define delay TC
 #ifdef CT
   "d0=0.1u"
 #else
-  "d0=in0/2.-d12-4u"
+  "d0=in0/2.-0.6366*pwc-d12-2u"
 #endif
 
 define list<loopcounter> ap_flg = {0 1}
@@ -79,8 +79,7 @@ define loopcounter maxtd
 
 "maxtd= 2.*trunc( ( TC*0.5 - pwc - 4u - d12 - d0)/in0)"
 
-"cnst21=o1/bf1" ; why not fq=0:f4 / fq=0:f1
-"cnst41=o4/bf4"
+"cnst21=o1/bf1"
 
 ;hard code zero power
 "plw0=0."
@@ -111,7 +110,7 @@ define loopcounter maxtd
 
 
 ;define constants to check power levels
-"cnst43=plw41"
+"cnst41=plw41"
 
 acqt0=0.0"
 
@@ -128,7 +127,7 @@ acqt0=0.0"
     print "ERROR: Deuterium decoupling power too high"
     goto HaltAcqu
   }
-  if "cnst43>20.0"
+  if "cnst41>20.0"
   {
     10u
     print "ERROR: Deuterium decoupling power too high"
@@ -149,9 +148,174 @@ acqt0=0.0"
   50u LOCKH_ON
   d12 H2_PULSE
 
+#ifdef FLOPSY
+  10u fq=cnst23(bf ppm):f1
+  d12 pl17:f1
+4 p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph21
+  p17*1.067 ph22
+  p17*1.822 ph23
+  p17*1.767 ph24
+  p17*1.444 ph25
+  p17*1.767 ph24
+  p17*1.822 ph23
+  p17*1.067 ph22
+  p17*0.511 ph21
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+
+  p17*0.511 ph26
+  p17*1.067 ph27
+  p17*1.822 ph28
+  p17*1.767 ph29
+  p17*1.444 ph30
+  p17*1.767 ph29
+  p17*1.822 ph28
+  p17*1.067 ph27
+  p17*0.511 ph26
+  lo to 4 times l1
+;--------------end FLOPSY-16
+#endif 
+
   d12 pl0:f1 pl41:f4
-  10u fq=cnst41(bf ppm):f4              ; CS of Dt
-  10u fq=cnst21(bf ppm):f1 		; CS of Ct
+  10u fq=cnst21(bf ppm):f1
   50u UNBLKGRAMP
   10u fq=0:f4
 
@@ -160,9 +324,8 @@ acqt0=0.0"
   (p41 ph11):f4
   d13
   d13 cpd4:f4 ph2
-; 
-; First INEPT
-  (pwc90_Ct:sp11 ph1):f1
+;
+  (pwc90_sel1:sp11 ph1):f1
   4u
   d12 pl1:f1
   "DELTA=taua-4u-d12-pwc"
@@ -172,13 +335,13 @@ acqt0=0.0"
   DELTA
   d12 pl0:f1
   4u
-  (pwc90_Ct:sp12 ph11):f1
+  (pwc90_sel1:sp12 ph11):f1
 ;
 ; Stop deuterium decoupling
   d13 do:f4
   (p41 ph13):f4
 ;
-  10u fq=cnst22(bf ppm):f1 		; CS of Cp
+  10u fq=cnst22(bf ppm):f1
   d12 pl0:f1
   4u
 ;  GRADIENT START
@@ -188,12 +351,12 @@ acqt0=0.0"
 ;
 ; Start deuterium decoupling
   10u fq=cnst42(bf ppm):f4
-  (p41 ph11):f4 			; CS of Dp
+  (p41 ph11):f4
   d13
   d13 cpd4:f4 ph2
 ;
 ; Chemical shift evolution
-  (pwc90_Cp:sp13 ph4):f1
+  (pwc90_sel2:sp13 ph4):f1
 #ifdef CT
 ;
 ; Start constant-time evolution
@@ -215,8 +378,8 @@ acqt0=0.0"
   d0
   d12 
 #endif
-  (pwc90_Cp2:sp14 ph2):f1
-;
+  (pwc90_sel2:sp14 ph2):f1
+; End constant-time evolution
 ; Stop deuterium decoupling
   d13 do:f4
   (p41 ph13):f4
@@ -227,42 +390,41 @@ acqt0=0.0"
   p52:gp2
   d16
 ; GRADIENT STOP
-;
-  10u fq=cnst21(bf ppm):f1 pl0:f1		; CS of Ct
+  10u fq=cnst21(bf ppm):f1 pl0:f1
   d13 BLKGRAMP
 ;
 ; Start deuterium decoupling (this will be kept on during acq)
-  10u fq=0:f4					; CS of Dt
+  10u fq=0:f4
   (p41 ph11):f4
   d13
   d13 cpd4:f4 ph2
 ;
   if "ap_flg[l11]>0" {
-    (pwc90_Ct:sp11 ph13):f1
+    (pwc90_sel1:sp11 ph13):f1
     4u
     d12 pl0:f1
     "DELTA=taua-4u-d12"
     DELTA
-    (pwc180_Cp:sp16 ph2):f1
+    (pwc180_sel2:sp16 ph2):f1
     4u
-    (pwc180_Ct:sp15 ph2):f1
+    (pwc180_sel1:sp15 ph2):f1
     4u
-    (pwc180_Cp:sp16 ph2):f1
+    (pwc180_sel2:sp16 ph2):f1
     "DELTA=taua"
     DELTA
   } else {
-    (pwc90_Ct:sp11 ph10):f1
+    (pwc90_sel1:sp11 ph10):f1
     4u
     d12 pl0:f1
     "DELTA=taua-4u-d12"
     DELTA
-    (pwc180_Cp:sp16 ph2):f1
+    (pwc180_sel2:sp16 ph2):f1
     4u
-    (pwc180_Ct:sp15 ph2):f1
+    (pwc180_sel1:sp15 ph2):f1
     4u
     "DELTA=taua"
     DELTA
-    (pwc180_Cp:sp16 ph2):f1
+    (pwc180_sel2:sp16 ph2):f1
   }
 ;
 ; ACQUISITION
@@ -288,51 +450,75 @@ ph10=0
 ph11=1
 ph12=2
 ph13=3
+;
+;FLOPSY pulses
+ph26=(720) 0
+ph27=(720) 90
+ph28=(720) 135
+ph29=(720) 630
+ph30=(720) 45
 
-;receiver phase
+ph21=(720) 360
+ph22=(720) 450
+ph23=(720) 495
+ph24=(720) 270
+ph25=(720) 405
+;
+;receiver pulse
 ph31=0 2 2 0
 
 
 ;p1: pwc
 ;p41: pwd
-;p11: pwc90_Ct   90 degree shaped pulse for Ct
-;p13: pwc90_Cp  90 degree shaped pulse for Cp
-;p15: pwc180_Ct 180 degree shaped pulse for Ct
-;p16: pwc180_Cp 180 degree shaped pulse for Cp
-;cnst2: = J(CC)  [36 Hz]
-;cnst21: Chemical shift offset for Ct   [=o1p]
-;cnst22: Chemical shift offset for Cp   [ppm]
-;cnst41: Chemical shift offset for Dt   [=o4p]
-;cnst42: Chemical shift offset for Dp   [ppm]
-;o1p: Ct chemical shift offset          [ppm]
-;o4p: Dt chemical shift offset          [ppm]
-;sp11:   90 degree shaped pulse for Ct        [Eburp2.1000]
-;sp12:   90 time-reversed shaped pulse for Ct [Eburp2tr.1000]
-;sp13:   90 degree shaped pulse for Cp        [Eburp2.1000]
-;sp14:   90 time-reversed shaped pulse for Cp [Eburp2tr.1000]
-;sp15:  180 inversion pulse for Ct            [Reburp.1000]
-;sp16:  180 inversion pulse for Cp            [Reburp.1000]
+;p11: pwc90_sel1   90 degree shaped pulse for Ce
+;p13: pwc90_sel2   90 degree shaped pulse for Cd
+;p15: pwc180_sel1 180 degree shaped pulse for Ce
+;p16: pwc180_sel2 180 degree shaped pulse for Cd
+;p17: pwc_dip
+;pwc90_sel1: 90 degree shaped pulse for Ce
+;pwc90_sel2: 90 degree shaped pulse for Ce
 ;plw0: Zero power [0W]
-;pl1: High power 13C 
-;pl4: High power 2H  
-;pl41: 2H decoupling 
+;pl1: High power 13C [48W]
+;pl4: High power 2H  [14W]
+;pl41: 2H decoupling [4W]
+;cnst2: = J(CC)  [35 Hz]
+;cnst21: Chemical shift offset for terminal 13C [=o1p]
+;cnst22: Chemical shift offset for coupled 13C   [ppm]
+;cnst23: Chemical shift offset for FLOPSY     [33 ppm]
+;sp11:   90 degree shaped pulse for Ct   [Eburp2.1000]
+;spnam11:                                [Eburp2.1000]
+;sp12:   90 time-reversed shaped pulse [Eburp2tr.1000]
+;spnam12:                              [Eburp2tr.1000]
+;sp13:   90 degree shaped pulse for Cc   [Eburp2.1000]
+;sp14:   90 time-reversed shaped pulse [Eburp2tr.1000]
+;sp15:  180 inversion pulse for Ct       [Reburp.1000]
+;sp16:  180 inversion pulse for Cc       [Reburp.1000]
+;o1p: C_epsilon chemical shift offset            [ppm]
+;o2p: H_e/H_d chemical shift offset              [ppm]
+;o3p: N_e chemical shift offset                  [ppm]
+;o4p: H_e/H_d chemical shift offset              [ppm]
 ;d16: delay for homospoil/gradient recovery     [200u]
 ;inf1: 1/SW(X) = 2 * DW(X)
 ;in0: 1/(2 * SW(X)) = DW(X)
 ;nd0: 2
 ;NS: 4 * n
 ;DS: 32
+;l1: Number of FLOPSY loops (Check flopsytime)
 ;l11: IPAP counter
+;ap_flg: Flag for selecting in-phase or anti-phase
 ;td1: number of experiments
 ;FnMODE: States-TPPI, TPPI, States or QSEQ
 ;cpd4:   decoupling according to sequence defined by cpdprg4   [CWP]
 ;pcpd4:  f4 channel - 90 degree pulse for decoupling sequence [250u]
-;
+
 ;for z-only gradients:
 ;gpz1: 7 %
 ;gpz2: 17 %
+;
 ;use gradient files:
 ;gpnam1: SINE.100
 ;gpnam2: SINE.100
+
+;preprocessor-flags-start
 
 
