@@ -16,8 +16,24 @@ can we take pl17 out of the base calibration and put into autocal
 
 
 To Do:
-cecd_2d_lys_2H_ipap_600_dfh_R1
-cecd_2d_lys_2H_ipap_best_v2_getZ.dfh
+
+
+
+
 
 Done:
 ctcp_2d_2H_ipap
+
+
+
+
+4/14/ cecd_3d_JCC_2H_ipap_800_dfh_v3	Jul
+33 cecd_TOCSY_2H_ipap_600_rd2		Dec 2
+35 cecd_TOCSY_2H_ipap_600_dfh		Jan 4
+
+3000 cecd_3d_JCC_2H_ipap_800_dfh_v3 July 11
+3003 cecd_3d_JCC_2H_ipap_800_dfh_v3 
+3002 cecd_3d_JCC_2H_ipap_800_dfh_v3
+
+230 cecd_TOCSY_2H_ipap_600_dfh Nov 17
+232 cecd_TOCSY_2H_ipap_600_rd  Nov 17

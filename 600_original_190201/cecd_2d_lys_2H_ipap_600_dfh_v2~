@@ -125,14 +125,12 @@ define loopcounter maxtd
 "acqt0=0.0"
 
 1 ze
-#ifdef CT
   if "td1>maxtd" 
   {
     10u
     print "ERROR: TD1 too large"
     goto HaltAcqu
   }
-#endif
   if "flopsytime>19m"
   {
     10u
