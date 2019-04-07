@@ -1,0 +1,55 @@
+Done:
+ctcp_2d_2H_ipap			cecd_2d_lys_2H_ipap_600_dfh_v2
+ctcp_3d_2H_TOCSY_ipap		cecd_TOCSY_2H_ipap_600_rd
+ctcp_2d_2H_R1_ipap		cecd_2d_lys_2H_ipap_600_dfh_R1 	check correct expt
+ctcp_2d_2H_R1p_ipap		cecd_R1r_2H_ipap_600_dfh	check correct expt
+ctcp_2d_2H_CEST_ipap		cecd_lys_2H_ipap_600_dfh_cest	check correct expt
+ctcp_3d_2H_Jcc_ipap		cecd_3d_JCC_2H_ipap_800_dfh_v3_1
+
+
+/cecd_3d_JCC_2H_ipap_800_dfh_v3_2
+			WHICH??
+
+Calib CEST?
+
+ToDo	
+  d13 cpd4:f4 ph10
+  d13 cpd3:f3 ph10
+
+"maxtd= 2.*trunc( ( TC*0.5 - pwc - 4u - d12 - d0)/in0)"
+
+d17 in CEST?
+why is the D decoupling in CEST not middle of aliphatic?
+SPw19 in JCC
+
+
+
+To add: 
+A check if the experiment is not too long?
+If not CT:  "d0=in0/2.-d12-4u" ?
+pl17 has generally been around 1000Hz for our stuff
+can we take pl17 out of the base calibration and put into autocal
+check on Deut power varies!
+f1 change 10u oe 30u
+UNBLKGRAMP ???? 
+Why relax without decopling?
+Take out non CT recording???
+
+check # spin lock points?
+cnst41= grep
+
+0hn4!notagain!
+
+Which R1 expt
+
+Which TOCSY expt
+4/14/ cecd_3d_JCC_2H_ipap_800_dfh_v3	Jul
+33 cecd_TOCSY_2H_ipap_600_rd2		Dec 2
+35 cecd_TOCSY_2H_ipap_600_dfh		Jan 4
+
+3000 cecd_3d_JCC_2H_ipap_800_dfh_v3 July 11
+3003 cecd_3d_JCC_2H_ipap_800_dfh_v3 
+3002 cecd_3d_JCC_2H_ipap_800_dfh_v3
+
+230 cecd_TOCSY_2H_ipap_600_dfh Nov 17
+232 cecd_TOCSY_2H_ipap_600_rd  Nov 17

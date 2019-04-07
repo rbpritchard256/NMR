@@ -41,8 +41,8 @@
 
 
 "d11=30m"
-"d12=15u"
-"d13=15u"
+"d12=2u"
+"d13=2u"
 
 define pulse pwc
        "pwc=p1"
@@ -59,8 +59,8 @@ define pulse pwc180_sel1
 define pulse pwc180_sel2
        "pwc180_sel2=p16"
 
-define pulse pwc_dip
-       "pwc_dip=p17"
+define pulse pwc_cest
+       "pwc_cest=p17"
 
 define pulse pwd
        "pwd=p41"
@@ -75,17 +75,16 @@ define delay TC
 #ifdef CT
   "d0=0.1u"
 #else
-  "d0=in0/2.-0.6366*pwc-d12-2u"
+  "d0=in0/2.-0.6366*pwc-d12"
 #endif
-
-define delay flopsytime
+"in10=inf2/2."
+"d10=in10/2. - 0.5*d12"
 
 define list<loopcounter> ap_flg = {0 1}
-define loopcounter maxtd
 "l11=0"
 
-"maxtd= 2.*trunc( ( TC*0.5 - pwc - 4u - d12 - d0)/in0)"
-"flopsytime=188.448*p17*l1"
+define loopcounter maxtd
+"maxtd= 2.*trunc( ( TC*0.5 - pwc - d12 - d0)/in0)"
 
 "cnst21=o1/bf1"
 
@@ -116,52 +115,52 @@ define loopcounter maxtd
    "spw14=(pwc/pwc90_sel2)*(pwc/pwc90_sel2)*plw1/(0.05813*0.05813)"
    "spw15=(pwc/pwc180_sel1)*(pwc/pwc180_sel1)*plw1/(0.041920*0.041920)"
    "spw16=(pwc/pwc180_sel2)*(pwc/pwc180_sel2)*plw1/(0.041920*0.041920)"
-   "plw17=(pwc/pwc_dip)*(pwc/pwc_dip)*plw1"
+;   "plw17=(pwc/pwc_cest)*(pwc/pwc_cest)*plw1"
 #endif
 
 
 ;define constants to check power levels
 "cnst41=plw41"
-"acqt0=0.0"
+"cnst42=plw42"
+"acqt0=0.1u"
 
 1 ze
-#ifdef CT
   if "td1>maxtd" 
   {
-    10u
+    20u
     print "ERROR: TD1 too large"
     goto HaltAcqu
   }
-#endif
-  if "flopsytime>19m"
+  if "pwc_cest < 1000u"
   {
-    10u
-    print "ERROR: FLOPSY mixing too long"
-    goto HaltAcqu
-  }
-  if "pwc_dip < 32u"
-  {
-     10u
-     print "ERROR: FLOPSY strength too high"
+     20u
+     print "ERROR: CEST strength too high"
      goto HaltAcqu
   }
-  if "pwd<125u"
+  if "pwd<200u"
   {
-    10u
+    20u
     print "ERROR: Deuterium decoupling power too high"
     goto HaltAcqu
   }
-  if "cnst41>20.0"
+  if "cnst41>6.5"
   {
-    10u
+    20u
     print "ERROR: Deuterium decoupling power too high"
     goto HaltAcqu
   }
+  if "cnst42>2.5"
+  {
+    20u
+    print "ERROR: Deuterium decoupling power too high"
+    goto HaltAcqu
+  }
+
 
   d11 LOCKDEC_ON
   50u LOCKH_ON
   d11 H2_PULSE
-  d12 pl31:f3 pl41:f4
+  d12 pl41:f4
 2 d11 do:f3 do:f4
   d11 H2_LOCK
 ;
@@ -171,192 +170,48 @@ define loopcounter maxtd
   d1*0.67
   50u LOCKH_ON
   d12 H2_PULSE
+  30u fq=0:f4
 
-#ifdef FLOPSY
-  10u fq=cnst23(bf ppm):f1
-  d12 pl17:f1
-4 p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
+  (pwc90_sel1:sp11 ph10):f1
+  4u
+  (pwc90_sel1:sp12 ph1):f1
+  4u
 
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
+; START CEST
 
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
+  d12 pl17:f1 pl42:f4
 
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
+  d12 cw:f1 cpd5:f4
+  d10
+  d10
+  d12 do:f1 do:f4
+  30u fq=cnst21(bf ppm):f1
 
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
-
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
-
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
-
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
-
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
-
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
-
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
-
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
-
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
-
-  p17*0.511 ph21
-  p17*1.067 ph22
-  p17*1.822 ph23
-  p17*1.767 ph24
-  p17*1.444 ph25
-  p17*1.767 ph24
-  p17*1.822 ph23
-  p17*1.067 ph22
-  p17*0.511 ph21
-
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
-
-  p17*0.511 ph26
-  p17*1.067 ph27
-  p17*1.822 ph28
-  p17*1.767 ph29
-  p17*1.444 ph30
-  p17*1.767 ph29
-  p17*1.822 ph28
-  p17*1.067 ph27
-  p17*0.511 ph26
-  lo to 4 times l1
-;--------------end FLOPSY-16
-#endif 
+; END - CEST
 
   d12 pl0:f1 pl41:f4
-  10u fq=cnst21(bf ppm):f1
+  30u fq=cnst21(bf ppm):f1
   50u UNBLKGRAMP
-  10u fq=0:f4
-  10u fq=0:f3
-  d12 pl31:f3
+  30u fq=0:f4
+
+;  GRADIENT START
+  p51:gp1
+  d16
+;  GRADIENT STOP
+
 ;
 ; Start deuterium decoupling
   (p41 ph11):f4
   d13
   d13 cpd4:f4 ph2
 ;
-  (pwc90_sel1:sp11 ph1):f1
+  (pwc90_sel1:sp11 ph10):f1
   4u
   d12 pl1:f1
   "DELTA=taua-4u-d12-pwc"
   DELTA
   (pwc*2 ph10):f1
-  "DELTA=taua-pwc-d12-4u"
+  "DELTA=taua-4u-d12-pwc"
   DELTA
   d12 pl0:f1
   4u
@@ -366,16 +221,15 @@ define loopcounter maxtd
   d13 do:f4
   (p41 ph13):f4
 ;
-  10u fq=cnst22(bf ppm):f1
+  30u fq=cnst22(bf ppm):f1
   d12 pl0:f1
-  4u
 ;  GRADIENT START
-  p51:gp1
+  p52:gp2
   d16
 ; GRADIENT STOP
 ;
 ; Start deuterium decoupling
-  10u fq=cnst42(bf ppm):f4
+  30u fq=cnst43(bf ppm):f4
   (p41 ph11):f4
   d13
   d13 cpd4:f4 ph2
@@ -389,10 +243,10 @@ define loopcounter maxtd
   d12 pl1:f1
   "DELTA=TC*0.5+d0-4u-d12-pwc"
   DELTA
-  (pwc*2 ph2):f1
+  (pwc*2 ph2):f1  
   4u
   d12 pl0:f1
-  "DELTA=TC*0.5-d0-pwc-4u-d12"
+  "DELTA=TC*0.5-d0-4u-d12-pwc"
   DELTA
 #else
 ;
@@ -401,7 +255,8 @@ define loopcounter maxtd
   d12 pl0:f1
   d0
   d0
-  d12 
+  d12 pl0:f1
+  4u
 #endif
   (pwc90_sel2:sp14 ph2):f1
 ; End constant-time evolution
@@ -412,14 +267,14 @@ define loopcounter maxtd
 ;
 ;
 ; GRADIENT START
-  p52:gp2
+  p53:gp3
   d16
 ; GRADIENT STOP
-  10u fq=cnst21(bf ppm):f1 pl0:f1
+  30u fq=cnst21(bf ppm):f1 pl0:f1
   d13 BLKGRAMP
 ;
 ; Start deuterium decoupling (this will be kept on during acq)
-  10u fq=0:f4
+  30u fq=0:f4
   (p41 ph11):f4
   d13
   d13 cpd4:f4 ph2
@@ -435,7 +290,7 @@ define loopcounter maxtd
     (pwc180_sel1:sp15 ph2):f1
     4u
     (pwc180_sel2:sp16 ph2):f1
-    "DELTA=taua"
+    "DELTA=taua-d12-4u"
     DELTA
   } else {
     (pwc90_sel1:sp11 ph10):f1
@@ -447,23 +302,27 @@ define loopcounter maxtd
     4u
     (pwc180_sel1:sp15 ph2):f1
     4u
-    "DELTA=taua"
+    "DELTA=taua-d12-4u"
     DELTA
     (pwc180_sel2:sp16 ph2):f1
   }
+  4u
+  d12 pl0:f1 pl31:f3
+
 ;
 ; ACQUISITION
-  go=2 ph31 cpd3:f3
+  go=2 ph31 
   d11 do:f3 do:f4 mc #0 to 2
-;	F2QF(calclist(ap_flg,1))
-        F2QF(calclc(l11,1))
+	F3QF(calclc(l11,1))
+	F2QF(caldel(d10,+in10))
 	F1PH(calph(ph4,+90),caldel(d0,+in0))
 
+  d1
   d11 H2_LOCK
   d11 LOCKH_OFF
   d11 LOCKDEC_OFF
 
-;so we can loop to the end for error messages .. 
+;so we can loop to the end.. 
 HaltAcqu, 1m
 stop, exit
 
@@ -503,46 +362,49 @@ ph31=0 2 2 0
 ;pwc90_sel1: 90 degree shaped pulse for Ce
 ;pwc90_sel2: 90 degree shaped pulse for Ce
 ;plw0: Zero power [0W]
-;pl1: High power 13C [48W]
+;pl1: High power 13C [135W]
 ;pl4: High power 2H  [14W]
 ;pl41: 2H decoupling [4W]
-;cnst2: = J(CC)  [35 Hz]
-;cnst21: Chemical shift offset for terminal 13C [=o1p]
-;cnst22: Chemical shift offset for coupled 13C   [ppm]
-;cnst23: Chemical shift offset for FLOPSY     [33 ppm]
-;sp11:   90 degree shaped pulse for Ct   [Eburp2.1000]
-;spnam11:                                [Eburp2.1000]
+;pl42: 2H decoupling during CEST [<0.4W]
+;pl17: 13C CEST saturation power               [<1e-4W]
+;cnst2: = J(CC)                                [37 Hz]
+;cnst21: C_e (lys) chemical shift offset       [=o1p, 40 ppm]
+;cnst22: C_d (lys) chemical shift offset       [32.0 ppm]
+;sp11:   90 degree shaped pulse for Ce [Eburp2.1000]
+;spnam11: Eburp2.1000
 ;sp12:   90 time-reversed shaped pulse [Eburp2tr.1000]
-;spnam12:                              [Eburp2tr.1000]
-;sp13:   90 degree shaped pulse for Cc   [Eburp2.1000]
+;spnam12: Eburp2tr.1000
+;sp13:   90 degree shaped pulse for Cd [Eburp2.1000]
 ;sp14:   90 time-reversed shaped pulse [Eburp2tr.1000]
-;sp15:  180 inversion pulse for Ct       [Reburp.1000]
-;sp16:  180 inversion pulse for Cc       [Reburp.1000]
-;o1p: C_epsilon chemical shift offset            [ppm]
-;o2p: H_e/H_d chemical shift offset              [ppm]
-;o3p: N_e chemical shift offset                  [ppm]
-;o4p: H_e/H_d chemical shift offset              [ppm]
-;d16: delay for homospoil/gradient recovery     [200u]
+;sp15:  180 inversion pulse for Ce     [Reburp.1000]
+;sp16:  180 inversion pulse for Cd     [Reburp.1000]
+;o1p: C_epsilon chemical shift offset          [40 ppm]
+;o2p: H_e/H_d chemical shift offset            [4 ppm]
+;o3p: N_e chemical shift offset                [35.0 ppm]
+;o4p: H_e/H_d chemical shift offset            [4. ppm]
+;d16: delay for homospoil/gradient recovery    [200u]
 ;inf1: 1/SW(X) = 2 * DW(X)
 ;in0: 1/(2 * SW(X)) = DW(X)
 ;nd0: 2
 ;NS: 4 * n
-;DS: 32
-;l1: Number of FLOPSY loops (Check flopsytime)
-;l11: IPAP counter
+;DS: > 32
 ;ap_flg: Flag for selecting in-phase or anti-phase
 ;td1: number of experiments
 ;FnMODE: States-TPPI, TPPI, States or QSEQ
-;cpd4:   decoupling according to sequence defined by cpdprg4   [CWP]
+;cpd3:   decoupling according to sequence defined by cpdprg3: wlatz16
+;cpd4:   decoupling according to sequence defined by cpdprg4
 ;pcpd4:  f4 channel - 90 degree pulse for decoupling sequence [250u]
 
 ;for z-only gradients:
 ;gpz1: 7 %
 ;gpz2: 17 %
-;
+;gpz3: 33 %
+;gpz4: 13 %
+
 ;use gradient files:
 ;gpnam1: SINE.100
 ;gpnam2: SINE.100
+;gpnam3: SINE.100
 
 ;preprocessor-flags-start
 

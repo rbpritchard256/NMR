@@ -47,6 +47,9 @@
 define pulse pwc
        "pwc=p1"
 
+define pulse pwn
+       "pwn=p3"
+       
 define pulse pwc90_sel1
        "pwc90_sel1=p11"
 
@@ -61,7 +64,13 @@ define pulse pwc180_sel2
 
 define pulse pwc_dip
        "pwc_dip=p17"
-
+       
+define pulse pwc_Ca
+       "pwc_Ca=p18"
+       
+define pulse pwc_ali
+       "pwc_ali=p19"
+       
 define pulse pwd
        "pwd=p41"
 
@@ -69,14 +78,16 @@ define delay taua
        "taua=1s/(cnst2*4.)"
 
 define delay TC
-       "TC=1s/(cnst2*1.)"
+;       "TC=1s/(cnst2*1.)"
+       "TC=d20"
 
 "in0=inf1/2"
-#ifdef CT
-  "d0=0.1u"
-#else
-  "d0=in0/2.-0.6366*pwc-d12-2u"
-#endif
+"d0=0.1u"
+;#ifdef CT
+;  "d0=0.1u"
+;#else
+;  "d0=in0/2.-0.6366*pwc-d12-2u"
+;#endif
 
 define delay flopsytime
 
@@ -84,7 +95,9 @@ define list<loopcounter> ap_flg = {0 1}
 define loopcounter maxtd
 "l11=0"
 
-"maxtd= 2.*trunc( ( TC*0.5 - pwc - 4u - d12 - d0)/in0)"
+"maxtd= 2.*trunc( ( TC-4u-4u-pwc_Ca-4u-pwn*2-4u-pwc_ali*0.5-d0)/in0)"
+
+
 "flopsytime=188.448*p17*l1"
 
 "cnst21=o1/bf1"
@@ -108,6 +121,11 @@ define loopcounter maxtd
 "spoffs15=0."
 "spoffs16=(cnst22-cnst21)*bf1/1000000."
 
+"spoal18=0.5"
+"spoffs18=(cnst25-cnst22)*bf1/1000000."
+"spoal19=0.5"
+"spoffs19=(cnst24-cnst22)*bf1/1000000."
+
 ;calculate power levels 
 #ifdef AUTOCAL
    "spw11=(pwc/pwc90_sel1)*(pwc/pwc90_sel1)*plw1/(0.05813*0.05813)"
@@ -125,14 +143,12 @@ define loopcounter maxtd
 "acqt0=0.0"
 
 1 ze
-#ifdef CT
   if "td1>maxtd" 
   {
     10u
     print "ERROR: TD1 too large"
     goto HaltAcqu
   }
-#endif
   if "flopsytime>19m"
   {
     10u
@@ -381,30 +397,36 @@ define loopcounter maxtd
   d13 cpd4:f4 ph2
 ;
 ; Chemical shift evolution
+  d12 pl0:f1 
+  d12 pl3:f3
+  4u
+;
   (pwc90_sel2:sp13 ph4):f1
-#ifdef CT
-;
-; Start constant-time evolution
   4u
-  d12 pl1:f1
-  "DELTA=TC*0.5+d0-4u-d12-pwc"
-  DELTA
-  (pwc*2 ph2):f1
-  4u
-  d12 pl0:f1
-  "DELTA=TC*0.5-d0-pwc-4u-d12"
-  DELTA
-#else
-;
-; Start non-constant-time evolution
-  4u
-  d12 pl0:f1
   d0
-  d0
-  d12 
-#endif
+  4u
+  (pwc_Ca:sp18 ph10):f1
+  4u
+  (pwn*2 ph10):f3
+  4u
+  "DELTA=TC-4u-4u-pwc_Ca-4u-pwn*2-4u-4u-0.5*pwc_ali"
+  DELTA
+   4u
+  (pwc_ali:sp19 ph2):f1
+  4u
+  "DELTA=TC-d0-pwc_ali*0.5-4u-4u-pwn*2-4u-pwc_Ca-4u"
+  DELTA
+  4u
+  (pwn*2 ph10):f3
+  4u
+  (pwc_Ca:sp18 ph10):f1
+  4u
   (pwc90_sel2:sp14 ph2):f1
+  4u
+;
 ; End constant-time evolution
+  d12 pl0:f3
+;
 ; Stop deuterium decoupling
   d13 do:f4
   (p41 ph13):f4
@@ -453,7 +475,7 @@ define loopcounter maxtd
   }
 ;
 ; ACQUISITION
-  go=2 ph31 cpd3:f3
+  go=2 ph31
   d11 do:f3 do:f4 mc #0 to 2
 ;	F2QF(calclist(ap_flg,1))
         F2QF(calclc(l11,1))

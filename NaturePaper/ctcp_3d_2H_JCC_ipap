@@ -1,0 +1,409 @@
+;
+; Filename: ctcp_3d_2H_JCC_ipap 
+;;
+; This sequence correlates the side chain carbon chemical shifts with the 
+; terminal (Ct) and penultimate (Cp) carbons in the following side chains:
+;    K Ce-Cd, R Cd-Cg, P Cd-Cg, I Cd1-Cg1, I Cg2-Cb, V Cg-Cb, T Cg-Cb
+;;
+;    Schema: Ct -> JCC -> Cali (t1) -> JCC -> Ct -> Cp (t2) -> Ct (t3)
+;;
+; Samples should be U-13C2H labelled
+;   If the sample is 15N labelled then 15N ought to be decoupled during
+;   acquisition but this is not possible with 2H decoupling (D+N=C).
+;   Decoupling in the indirect dimension is not necessary for these residues 
+;;
+; Set the following parameters
+;   O1P    	to the average chemical shift of Ct
+;   CNST22 	to the average chemical shift of Cp
+;   CNST23 	to the average chemical shift of Caliphatic (35ppm)
+;   O3P		to the nitrogen chemical shift
+;   O4P    	to the average chemical shift of Dt (bonded to Ct)
+;   CNST42 	to the average chemical shift of Dp (bonded to Cp)
+;   CNST43 	to the average chemical shift of Daliphatic (2.5ppm)
+;   CNST2  	to 1 bond 13C-13C coupling (36 Hz)
+;   P11/P13   	length of selective 90 pulses for Ct/Cp EBurp2 / EBurp2(tr)
+;   P15/P16/P17	length of selective 180 pulses for Ct/Cp/CO ReBurp
+;   P18		length of the FLOPSY pulses
+;   P41    	2H flanking pulses (@pl41)
+;   PLW41   	power of 2H cwp decoupling (1000Hz)
+;   cpd4	decoupling for t1 aliphatic CS evolution (broader band)
+;   PLW42	power for cpd4
+;
+;;
+;-DAUTOCAL will calibrate the following from p1:
+;   SPW11,12,13,14,15,16,17
+;   PLW18
+;;
+;"-DTOCSYPLANE omits the t2 evolution and records only the TOCSY plane"
+;;
+; Written by DFH / RP Feb 2019
+
+
+;$CLASS=HighRes
+;$DIM=2D
+;$TYPE=
+;$SUBTYPE=
+;$COMMENT=
+
+#include <Avance.incl>
+#include <Delay.incl>
+#include <Grad.incl>
+
+"d11=30m"
+"d12=15u"
+"d13=15u"
+
+;define pulses
+define pulse pwc
+       "pwc=p1"
+define pulse pwc90_Ct
+       "pwc90_Ct=p11"
+define pulse pwc90_Cp
+        "pwc90_Cp=p13"
+define pulse pwc180_Ct
+       "pwc180_Ct=p15"
+define pulse pwc180_Cp
+       "pwc180_Cp=p16"
+
+define pulse pwd
+       "pwd=p41"
+
+;define delays
+define delay taua
+       "taua=1s/(cnst2*4.)"
+define delay TC
+       "TC=1s/(cnst2*1.)"
+
+"in0=inf1/2"
+"d0=0.1u"
+
+"in10=inf2/2"
+"d10=in10/2.-0.6366*pwc"
+
+define list<loopcounter> ap_flg = {0 1}
+"l11=0"
+define loopcounter maxtd
+
+"maxtd= 2.*trunc( ( TC*0.5 - pwc - d12 - d0)/in0)"
+
+"cnst21=o1/bf1"
+"cont41=o4/bf4"
+
+;hard code zero power
+"plw0=0."
+
+;hard code offsets and spoals
+"spoal11=1"
+"spoffs11=0."
+"spoal12=0."
+"spoffs12=0."
+"spoal13=1."
+"spoffs13=0."
+"spoal14=0."
+"spoffs14=0."
+"spoal15=0.5"
+"spoffs15=0."
+"spoal16=0.5"
+"spoffs16=(cnst22-cnst21)*bf1/1000000."
+"spoal18=1.0"
+"spoffs18=(cnst21-cnst23)*bf1/1000000."
+
+;calculate power levels 
+#ifdef AUTOCAL
+   "spw11=(pwc/pwc90_Ct)*(pwc/pwc90_Ct)*plw1/(0.05813*0.05813)"
+   "spw12=(pwc/pwc90_Ct)*(pwc/pwc90_Ct)*plw1/(0.05813*0.05813)"
+   "spw13=(pwc/pwc90_Cp)*(pwc/pwc90_Cp)*plw1/(0.05813*0.05813)"
+   "spw14=(pwc/pwc90_Cp)*(pwc/pwc90_Cp)*plw1/(0.05813*0.05813)"
+   "spw15=(pwc/pwc180_Ct)*(pwc/pwc180_Ct)*plw1/(0.041920*0.041920)"
+   "spw16=(pwc/pwc180_Cp)*(pwc/pwc180_Cp)*plw1/(0.041920*0.041920)"
+   "spw18=(pwc/pwc90_Ct)*(pwc/pwc90_Ct)*plw1/(0.05813*0.05813)"
+#endif
+
+
+;define constants to check power levels
+"cnst44=plw41"
+"acqt0=0.0"
+
+1 ze
+  if "td1>maxtd" 
+  {
+    2u
+    print "ERROR: TD1 too large"
+    goto HaltAcqu
+  }
+  if "pwd<230u"
+  {
+    2u
+    print "ERROR: Deuterium decoupling power too high"
+    goto HaltAcqu
+  }
+  if "cnst44>5.0"
+  {
+    2u
+    print "ERROR: Deuterium decoupling power too high"
+    goto HaltAcqu
+  }
+
+  d11 LOCKDEC_ON
+  50u LOCKH_ON
+  d11 H2_PULSE
+  d12 pl41:f4
+
+2 d11 do:f3 do:f4
+  d11 H2_LOCK
+; wait for the lock to stabilise before starting to lock
+  d1*0.33
+  6m LOCKH_OFF
+  d1*0.67
+  50u LOCKH_ON
+  d12 H2_PULSE
+
+  d12 pl0:f1 
+  D12 pl41:f4					; Power for cw decoupling 
+  d12 pl31:f3
+
+  30u fq=cnst23(bf ppm):f1			; CS Cali
+  30u fq=cnst41(bf ppm):f4 			; Cs Dt
+  50u UNBLKGRAMP
+
+;
+; Start deuterium decoupling
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph10
+  d12 pl0:f1
+  4u
+
+  (pwc90_Ct:sp18 ph1):f1			; 90 Ct
+  4u
+  d12 pl1:f1
+  "DELTA=TC-4u-d12-pwc"
+  DELTA						; Couple Ct -> Cali
+  (pwc*2 ph5):f1
+  "DELTA=TC-pwc-0.6366*pwc - d13 - d12 - 10u - d13 -d13"
+  DELTA
+
+  d13 do:f4 
+  d12 pl42:f4					; Power for cpd4
+  10u fq=cnst43(bf ppm):f4 			; CS Dali
+  d13 cpd4:f4 ph10
+  d13 cpd3:f3 ph10
+  
+  (pwc ph6):f1
+  d10						; t1, CS of coupled carbon
+  d10
+  (pwc ph7):f1
+
+  d13 do:f4
+  d13 do:f3
+  10u fq=cnst41(bf ppm):f4 			; CS Dt
+  d12 pl41:f4					; Power for cw decoupling 
+  d13 cw:f4 ph10
+
+  "DELTA=TC-pwc-0.6366*pwc - d13 - d12 - 10u - d13 -d13"
+  DELTA						; Couple Cali -> Ct
+  (pwc*2 ph8):f1
+  "DELTA=TC-pwc-0.6366*pwc"
+  d12 pl1:f1
+  DELTA
+  (pwc ph9):f1
+
+;
+; Stop deuterium decoupling
+  d13 do:f4
+  (pwd ph13):f4
+
+;  GRADIENT START
+  p50:gp0
+  d16
+
+  d12 pl0:f1
+  30u fq=cnst21(bf ppm):f1			; CS Ct
+
+;
+; Start deuterium decoupling
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph10
+
+  (pwc90_Ct:sp11 ph10):f1
+  4u
+  d12 pl1:f1
+  "DELTA=taua-4u-d12-pwc"
+  DELTA
+  (pwc*2 ph10):f1
+  "DELTA=taua-d12-4u-pwc"
+  DELTA
+  d12 pl0:f1
+  4u
+  (pwc90_Ct:sp12 ph11):f1
+;
+; Stop deuterium decoupling
+  d13 do:f4
+  (pwd ph13):f4
+;
+  30u fq=cnst22(bf ppm):f1 			; CS Cp
+  30u fq=cnst42(bf ppm):f4 			; CD Dp
+
+  d12 pl0:f1
+
+;  GRADIENT START
+  p51:gp1
+  d16
+
+; Start deuterium decoupling
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph10
+;
+; Start constant-time evolution
+  (pwc90_Cp:sp13 ph4):f1
+  4u
+  d12 pl1:f1
+  "DELTA=TC*0.5+d0-4u-d12-pwc"
+  DELTA
+  (pwc*2 ph10):f1  
+  d12 pl0:f1
+  "DELTA=TC*0.5-d0-d12-4u-pwc"
+  DELTA
+  4u
+  (pwc90_Cp:sp14 ph10):f1
+; End constant-time evolution
+
+; Stop deuterium decoupling
+  d13 do:f4
+  (pwd ph13):f4
+  d12
+;
+;
+; GRADIENT START
+  p52:gp2
+  d16
+; GRADIENT STOP
+
+  30u fq=cnst21(bf ppm):f1 			; CS Ct
+  d13 pl0:f1 ; Cd
+  30u fq=cnst42(bf ppm):f4 			; CS Dt
+
+  d13 BLKGRAMP
+;
+; Start deuterium decoupling (this will be kept on during acq)
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph10
+;
+  if "ap_flg[l11]>0" {
+    (pwc90_Ct:sp11 ph13):f1
+     4u
+    d12 pl0:f1
+    "DELTA=taua-4u-d12"
+    DELTA
+    (pwc180_Cp:sp16 ph10):f1
+    4u
+    (pwc180_Ct:sp15 ph10):f1
+    4u
+    (pwc180_Cp:sp16 ph10):f1
+    "DELTA=taua"
+    DELTA
+  } else {
+    (pwc90_Ct:sp11 ph10):f1
+    4u
+    d12 pl0:f1
+    "DELTA=taua-4u-d12"
+    DELTA
+    (pwc180_Cp:sp16 ph10):f1
+    4u
+    (pwc180_Ct:sp15 ph10):f1
+    "DELTA=taua"
+    DELTA
+    (pwc180_Cp:sp16 ph10):f1
+  }
+
+;
+; ACQUISITION
+  go=2 ph31 
+  d11 do:f4 mc #0 to 2
+      	F3QF(calclc(l11,1))
+	F2PH(calph(ph1,+90) & calph(ph5,+90) & calph(ph6,+90), caldel(d10,+in10) & calph(ph7,+180) & calph(ph8,+180) & calph(ph9,+180) & calph(ph31,+180))
+	F1PH(calph(ph4,+90),caldel(d0,+in0))
+
+  d11 H2_LOCK
+  d11 LOCKH_OFF
+  d11 LOCKDEC_OFF
+
+;so we can loop to the end.. 
+HaltAcqu, 1m
+stop, exit
+
+ph1= 0 
+ph2= 0
+ph4= 0 0 0 0  2 2 2 2
+ph5= 0 1
+ph6= 1 1 3 3 
+ph7= 1 1 1 1  3 3 3 3 
+ph8= 0
+ph9= 0
+
+ph10=0
+ph11=1
+ph12=2
+ph13=3
+
+;receiver pulse
+ph31=0 2 0 2  2 0 2 0
+    
+
+
+;p1:     pwc 					[hard 90]
+;p11:    pwc90_Ct   90 degree shaped pulse for Ct
+;p13:    pwc90_Cp   90 degree shaped pulse for Cp
+;p15:    pwc180_Ct  180 degree shaped pulse for Ct
+;p16:    pwc180_Cp  180 degree shaped pulse for Cp
+;p41:    pwd					[flanking pulse, pl41]
+;cnst2:  =J(CC)  				[36 Hz]
+;cnst21: Chemical shift offset for Ct   	[=o1p]
+;cnst22: Chemical shift offset for Cp   	[ppm]
+;cnst23: Chemical shift offset for Cali 	[35ppm]
+;cnst41: Chemical shift offset for Dt   	[=o4p]
+;cnst42: Chemical shift offset for Dp   	[ppm]
+;cnst43: Chemical shift offset for Dali   	[2.5ppm]
+;o1p:    Ct chemical shift offset          	[ppm]
+;o3p:    N chemical shift offset     	     	[ppm]
+;o4p:    Dt chemical shift offset          	[ppm]
+;sp11:   90 degree shaped pulse for Ct       	[Eburp2.1000]
+;sp12:   90 time-reversed shaped pulse for Ct 	[Eburp2tr.1000]
+;sp13:   90 degree shaped pulse for Cp        	[Eburp2.1000]
+;sp14:   90 time-reversed shaped pulse for Cp 	[Eburp2tr.1000]
+;sp15:   180 inversion pulse for Ct            	[Reburp.1000]
+;sp16:   180 inversion pulse for Cp            	[Reburp.1000]
+;sp18:   90 Ct when carrier at Cali            	[Eburp2.1000]
+;plw0:   Zero power [0W]
+;pl1:    High power 13C 
+;pl41:	 power for CW decoupling		[1000Hz]
+;pl42:	 power for Waltz decoupling 		[??Hz]?
+;d16: 	 delay for homospoil/gradient recovery  [200u]
+;inf1: 	 1/SW(X) = 2 * DW(X)
+;in0: 	 1/(2 * SW(X)) = DW(X)
+;nd0: 	 2
+;NS: 	 4 * n
+;DS: 	 32
+;l11:    IPAP counter
+;ap_flg: Flag for selecting in-phase or anti-phase
+;td1: 	 number of experiments
+;FnMODE: States-TPPI, TPPI, States or QSEQ
+;cpd3:   N decoupling				[WALTZ-16]
+;cpd4:   decoupling, transverse on Cali cpdprg4	[WALTZ-16]
+
+;for z-only gradients:
+;gpz0: 33%
+;gpz1: 7 %
+;gpz2: 17 %
+
+;use gradient files:
+;gpnam0: SINE.100
+;gpnam1: SINE.100
+;gpnam2: SINE.100
+
+;preprocessor-flags-start
+
+
