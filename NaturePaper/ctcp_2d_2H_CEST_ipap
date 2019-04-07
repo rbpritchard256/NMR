@@ -1,11 +1,11 @@
 ;
 ; Filename: ctcp_2d_2H_CEST_ipap 
 ;;
-; This sequence correlates the side chain carbon chemical shifts with the 
-; terminal (Ct) and penultimate (Cp) carbons in the following side chains:
+; This sequence measures CEST from the terminal carbon (Ct) in the following 
+; side chains:
 ;    K Ce-Cd, R Cd-Cg, P Cd-Cg, I Cd1-Cg1, I Cg2-Cb, V Cg-Cb, T Cg-Cb
 ;;
-;    Schema: Cali (t1) -> [CEST] -> Cp (t1) -> Ct (t2)
+;    Schema: Cali (t1) ->CEST -> Cp (t1) -> Ct (t2)
 ;;
 ; Samples should be U-13C2H labelled
 ;   If the sample is 15N labelled then 15N ought to be decoupled during
@@ -23,14 +23,12 @@
 ;   P41    	2H flanking pulses (@pl41)
 ;   PL17 	power for spin lock
 ;   PLW41   	power of 2H cwp decoupling (1000Hz)
-;   cpd4	decoupling for t1 aliphatic CS evolution (broader band)
+;   cpd4	decoupling during CEST (broader band)
 ;   PLW42	power for cpd4
 ;
 ;;
 ;-DAUTOCAL will calibrate the following from p1:
 ;   SPW11,12,13,14,15,16
-;;
-;"-DTOCSYPLANE omits the t2 evolution and records only the TOCSY plane"
 ;;
 ; Written by DFH / RP Feb 2019
 
@@ -45,10 +43,6 @@
 #include <Delay.incl>
 #include <Grad.incl>
 
-
-"d11=30m"
-"d12=15u"
-"d13=15u"
 
 ;define pulses
 define pulse pwc
@@ -67,13 +61,15 @@ define pulse pwd
        "pwd=p41"
 
 ;define delays
+"d11=30m"
+"d12=15u"
+"d13=15u"
 define delay taua
        "taua=1s/(cnst2*4.)"
 
 define delay TC
        "TC=1s/(cnst2*1.)"
 
-;define delays
 "in0=inf1/2"
 "d0=0.1u"
 
@@ -167,9 +163,9 @@ define list<frequency> C13sat = <$FQ1LIST>
   50u LOCKH_ON
   d12 H2_PULSE
 
-  30u fq=cnst21(bf ppm):f1			; CS Ct
+  30u fq=cnst21(bf ppm):f1				; CS Ct
   50u UNBLKGRAMP				
-  30u fq=cnst41(bf ppm):f4			; CS Dt
+  30u fq=cnst41(bf ppm):f4				; CS Dt
 
   d12 pl0:f1
 
@@ -184,7 +180,7 @@ define list<frequency> C13sat = <$FQ1LIST>
   } else {
     d12 pl17:f1 pl42:f4
   }
-  30u fq=C13sat:f1				; CS cest
+  30u fq=C13sat:f1					; CS cest
   d12 cw:f1 cpd4:f4
   if "abs(C13sat)>10000Hz" {
     d12 
@@ -194,7 +190,7 @@ define list<frequency> C13sat = <$FQ1LIST>
   d12 do:f1 do:f4
 ; END - CEST
 
-  30u fq=cnst21(bf ppm):f1			; CS Ct
+  30u fq=cnst21(bf ppm):f1				; CS Ct
   d12 pl0:f1 pl41:f4
   50u UNBLKGRAMP
 

@@ -50,10 +50,6 @@
 #include <Grad.incl>
 
 
-"d11=30m"
-"d12=15u"
-"d13=15u"
-
 ; Define pulses
 define pulse pwc
        "pwc=p1"
@@ -76,7 +72,10 @@ define pulse pwn
 define pulse pwd
        "pwd=p41"
 
-;define deltas
+;define delays
+"d11=30m"
+"d12=15u"
+"d13=15u"
 define delay taua
        "taua=1s/(cnst2*4.)"
 define delay TC
@@ -427,6 +426,7 @@ define loopcounter maxtd
 
 ; t2 CS evolution, constant-time
   (pwc90_Cp:sp13 ph4):f1
+
 #if !defined(TOCSYPLANE)			
   4u
   d12 pl1:f1
@@ -586,6 +586,5 @@ ph31=0 2 2 0
 ;gpnam1: SINE.100
 ;gpnam2: SINE.100
 
-;preprocessor-flags-start			; What does this line do
-
+;preprocessor-flags-start			
 
