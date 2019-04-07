@@ -1,11 +1,11 @@
+;
+; Filename: ctcp_2d_2H_R1_ipap
 ;;
-; Filename: ctcp_2d_2H_ipap.dfh 
-;;
-; This sequence correlates the chemical shifts (SQC) of the terminal (Ct) and
-; penultimate (Cp) carbons in the following side chains:
+; This sequence correlates the side chain carbon chemical shifts with the 
+; terminal (Ct) and penultimate (Cp) carbons in the following side chains:
 ;    K Ce-Cd, R Cd-Cg, P Cd-Cg, I Cd1-Cg1, I Cg2-Cb, V Cg-Cb, T Cg-Cb
 ;;
-;    Schema: Ct -> Cp (t1) -> Ct (t2)
+;    Schema: Ct -> [relax (vd)] -> Cp (t1) -> Ct (t2)
 ;;
 ; Samples should be U-13C2H labelled
 ;   If the sample is 15N labelled then 15N ought to be decoupled during
@@ -18,18 +18,16 @@
 ;   O4P    	to the average chemical shift of Dt (bonded to Ct)
 ;   CNST42 	to the average chemical shift of Dp (bonded to Cp)
 ;   CNST2  	to 1 bond 13C-13C coupling (36 Hz)
-;   P11/ P13   	length of selective 90 pulses for Ct/Cp EBurp2 / EBurp2(tr)
-;   P15/ P16   	length of selective 180 pulses for Ct/Cp ReBurp
+;   P11/P13   	length of selective 90 pulses for Ct/Cp EBurp2 / EBurp2(tr)
+;   P15/P16	length of selective 180 pulses for Ct/Cp ReBurp
 ;   P41    	2H flanking pulses (@pl41)
-;   PLW41   	power of 2H cwp decoupling (850Hz)
+;   PLW41   	power of 2H cwp decoupling (1000Hz)
+;
 ;;
-;-DAUTOCAL will calibrate the following from p1:
-;   SPW11,12,13,14,15,16
-;;
-;"-DCT records t1 in a constant time manner"
+;-DAUTOCAL 	will calibrate the following from p1:
+;   		SPW11,12,13,14,15,16
 ;;
 ; Written by DFH / RP Feb 2019
-
 
 ;$CLASS=HighRes
 ;$DIM=2D
@@ -46,8 +44,8 @@
 "d13=15u"
 
 ; Define pulses
-defint pulse pwc
-       "pwc = p1"
+define pulse pwc
+       "pwc=p1"
 define pulse pwc90_Ct
        "pwc90_Ct=p11"
 define pulse pwc90_Cp
@@ -56,22 +54,17 @@ define pulse pwc180_Ct
        "pwc180_Ct=p15"
 define pulse pwc180_Cp
        "pwc180_Cp=p16"
-
 define pulse pwd
        "pwd=p41"
 
-; Define deltas
+;define deltas
 define delay taua
        "taua=1s/(cnst2*4.)"
 define delay TC
        "TC=1s/(cnst2*1.)"
 
 "in0=inf1/2"
-#ifdef CT
-  "d0=0.1u"
-#else
-  "d0=in0/2.-d12-4u"
-#endif
+"d0=0.1u"
 
 define list<loopcounter> ap_flg = {0 1}
 define loopcounter maxtd
@@ -79,7 +72,7 @@ define loopcounter maxtd
 
 "maxtd= 2.*trunc( ( TC*0.5 - pwc - 4u - d12 - d0)/in0)"
 
-"cnst21=o1/bf1" ; why not fq=0:f4 / fq=0:f1
+"cnst21=o1/bf1"
 "cnst41=o4/bf4"
 
 ;hard code zero power
@@ -112,8 +105,7 @@ define loopcounter maxtd
 
 ;define constants to check power levels
 "cnst44=plw41"
-
-acqt0=0.0"
+"acqt0=0.0"
 
 1 ze
   if "td1>maxtd" 
@@ -138,7 +130,6 @@ acqt0=0.0"
   d11 LOCKDEC_ON
   50u LOCKH_ON
   d11 H2_PULSE
-  d12 pl41:f4
 
 2 d11 do:f4
   d11 H2_LOCK
@@ -150,18 +141,26 @@ acqt0=0.0"
   d12 H2_PULSE
 
   d12 pl0:f1 pl41:f4
-  10u fq=cnst41(bf ppm):f4              ; CS of Dt
-  10u fq=cnst21(bf ppm):f1 		; CS of Ct
+  30u fq=cnst21(bf ppm):f1				; CS Ct
   50u UNBLKGRAMP
-
-
+  30u fq=cnst41(bf ppm):f4				; CS Dt
+  d12 pl1:f1
+  4u
+;
+; Relaxation 
+  (pwc ph10):f1
+  4u
+  p15:gp1*0.33
+  d16
+  vd
+  d12 pl0:f1
+  4u
 ;
 ; Start deuterium decoupling
   (pwd ph11):f4
   d13
-  d13 cpd4:f4 ph2
-; 
-; First INEPT
+  d13 cw:f4 ph2
+;
   (pwc90_Ct:sp11 ph1):f1
   4u
   d12 pl1:f1
@@ -178,64 +177,54 @@ acqt0=0.0"
   d13 do:f4
   (pwd ph13):f4
 ;
-  10u fq=cnst22(bf ppm):f1 		; CS of Cp
+  30u fq=cnst22(bf ppm):f1				;CS Cp
   d12 pl0:f1
   4u
-;  GRADIENT START
+
+; GRADIENT START
   p51:gp1
   d16
 ; GRADIENT STOP
 ;
 ; Start deuterium decoupling
-  10u fq=cnst42(bf ppm):f4
-  (pwd ph11):f4 			; CS of Dp
+  30u fq=cnst42(bf ppm):f4				; CS Dp
+  (pwd ph11):f4
   d13
-  d13 cpd4:f4 ph2
+  d13 cw:f4 ph2
 ;
 ; Chemical shift evolution
   (pwc90_Cp:sp13 ph4):f1
-#ifdef CT
-;
+
 ; Start constant-time evolution
   4u
   d12 pl1:f1
   "DELTA=TC*0.5+d0-4u-d12-pwc"
   DELTA
   (pwc*2 ph2):f1
-  4u
   d12 pl0:f1
   "DELTA=TC*0.5-d0-pwc-4u-d12"
   DELTA
-#else
-;
-; Start non-constant-time evolution
   4u
-  d12 pl0:f1
-  d0
-  d0
-  d12 
-#endif
-  (pwc90_Cp2:sp14 ph2):f1
-;
+  (pwc90_Cp:sp14 ph2):f1
+
 ; Stop deuterium decoupling
   d13 do:f4
   (pwd ph13):f4
   d12
 ;
-;
 ; GRADIENT START
   p52:gp2
   d16
 ; GRADIENT STOP
-;
-  10u fq=cnst21(bf ppm):f1 pl0:f1		; CS of Ct
+
+  30u fq=cnst21(bf ppm):f1 pl0:f1			; CS Ct
   d13 BLKGRAMP
-;
+
 ; Start deuterium decoupling (this will be kept on during acq)
-  10u fq=0:f4					; CS of Dt
+  30u fq=cnst41(bf ppm):f4 pl41:f4			; CS Dt
   (pwd ph11):f4
   d13
-  d13 cpd4:f4 ph2
+  d13 cw:f4 ph2
 ;
   if "ap_flg[l11]>0" {
     (pwc90_Ct:sp11 ph13):f1
@@ -268,8 +257,8 @@ acqt0=0.0"
 ; ACQUISITION
   go=2 ph31 
   d11 do:f4 mc #0 to 2
-;	F2QF(calclist(ap_flg,1))
-        F2QF(calclc(l11,1))
+        F3QF(calclc(l11,1))
+	F2QF(calclist(vd,1))
 	F1PH(calph(ph4,+90),caldel(d0,+in0))
 
   d11 H2_LOCK
@@ -289,50 +278,52 @@ ph11=1
 ph12=2
 ph13=3
 
-;receiver phase
+;receiver pulse
 ph31=0 2 2 0
 
 
-;p1: pwc
-;p11: pwc90_Ct   90 degree shaped pulse for Ct
-;p13: pwc90_Cp   90 degree shaped pulse for Cp
-;p15: pwc180_Ct  180 degree shaped pulse for Ct
-;p16: pwc180_Cp  180 degree shaped pulse for Cp
-;p41: pwd
+;p1:  pwc 					[hard 90]
+;p11: pwc90_Ct   90 degree shaped pulse for Ct  [90_Ct]
+;p13: pwc90_Cp   90 degree shaped pulse for Cp	[90_Cp]
+;p15: pwc180_Ct  180 degree shaped pulse for Ct	[180_Ct]
+;p16: pwc180_Cp  180 degree shaped pulse for Cp [180_Cp]
+;p41: pwd					[flanking pulse, pl41]
 ;cnst2: = J(CC)  				[36 Hz]
 ;cnst21: Chemical shift offset for Ct   	[=o1p]
 ;cnst22: Chemical shift offset for Cp   	[ppm]
 ;cnst41: Chemical shift offset for Dt   	[=o4p]
 ;cnst42: Chemical shift offset for Dp   	[ppm]
-;o1p: Ct chemical shift offset          	[ppm]
-;o4p: Dt chemical shift offset          	[ppm]
+;o1p:    Ct chemical shift offset          	[ppm]
+;o4p:    Dt chemical shift offset          	[ppm]
 ;sp11:   90 degree shaped pulse for Ct       	[Eburp2.1000]
 ;sp12:   90 time-reversed shaped pulse for Ct 	[Eburp2tr.1000]
 ;sp13:   90 degree shaped pulse for Cp        	[Eburp2.1000]
 ;sp14:   90 time-reversed shaped pulse for Cp 	[Eburp2tr.1000]
 ;sp15:  180 inversion pulse for Ct            	[Reburp.1000]
 ;sp16:  180 inversion pulse for Cp            	[Reburp.1000]
-;plw0: Zero power 				[0W]
-;pl1: High power 13C 
-;pl4: High power 2H  
-;pl41: 2H decoupling 
-;d16: delay for homospoil/gradient recovery	[200u]
+;plw0:  Zero power 				[0W]
+;pl1:   High power 13C 
+;pl4:   High power 2H  
+;pl41:  2H decoupling
+;d16: delay for homospoil/gradient recovery     [200u]
 ;inf1: 1/SW(X) = 2 * DW(X)
 ;in0: 1/(2 * SW(X)) = DW(X)
 ;nd0: 2
 ;NS: 4 * n
 ;DS: 32
 ;l11: IPAP counter
+;ap_flg: Flag for selecting in-phase or anti-phase
 ;td1: number of experiments
 ;FnMODE: States-TPPI, TPPI, States or QSEQ
-;cpd4:   decoupling according to sequence defined by cpdprg4   	[CWP]
-;pcpd4:  f4 channel - 90 degree pulse for decoupling sequence 	[250u]
-;
+
 ;for z-only gradients:
 ;gpz1: 7 %
 ;gpz2: 17 %
+;
 ;use gradient files:
 ;gpnam1: SINE.100
 ;gpnam2: SINE.100
+
+;preprocessor-flags-start
 
 
