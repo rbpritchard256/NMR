@@ -1,11 +1,11 @@
 ;
 ; Filename: ctcp_2d_2H_R1_ipap
 ;;
-; This sequence correlates the side chain carbon chemical shifts with the 
-; terminal (Ct) and penultimate (Cp) carbons in the following side chains:
+; This sequence measures the R1 relaxation of the terminal (Ct) in the 
+; following side chains:
 ;    K Ce-Cd, R Cd-Cg, P Cd-Cg, I Cd1-Cg1, I Cg2-Cb, V Cg-Cb, T Cg-Cb
 ;;
-;    Schema: Ct -> [relax (vd)] -> Cp (t1) -> Ct (t2)
+;    Schema: Ct -> relax (vd) -> Cp (t1) -> Ct (t2)
 ;;
 ; Samples should be U-13C2H labelled
 ;   If the sample is 15N labelled then 15N ought to be decoupled during
@@ -39,10 +39,6 @@
 #include <Delay.incl>
 #include <Grad.incl>
 
-"d11=30m"
-"d12=15u"
-"d13=15u"
-
 ; Define pulses
 define pulse pwc
        "pwc=p1"
@@ -57,7 +53,10 @@ define pulse pwc180_Cp
 define pulse pwd
        "pwd=p41"
 
-;define deltas
+;define delays
+"d11=30m"
+"d12=15u"
+"d13=15u"
 define delay taua
        "taua=1s/(cnst2*4.)"
 define delay TC
@@ -282,13 +281,13 @@ ph13=3
 ph31=0 2 2 0
 
 
-;p1:  pwc 					[hard 90]
-;p11: pwc90_Ct   90 degree shaped pulse for Ct  [90_Ct]
-;p13: pwc90_Cp   90 degree shaped pulse for Cp	[90_Cp]
-;p15: pwc180_Ct  180 degree shaped pulse for Ct	[180_Ct]
-;p16: pwc180_Cp  180 degree shaped pulse for Cp [180_Cp]
-;p41: pwd					[flanking pulse, pl41]
-;cnst2: = J(CC)  				[36 Hz]
+;p1:     pwc 						[hard 90]
+;p11:    pwc90_Ct   90 degree shaped pulse for Ct  	[90_Ct]
+;p13:    pwc90_Cp   90 degree shaped pulse for Cp	[90_Cp]
+;p15:    pwc180_Ct  180 degree shaped pulse for Ct	[180_Ct]
+;p16:    pwc180_Cp  180 degree shaped pulse for Cp 	[180_Cp]
+;p41:    pwd					[flanking pulse, pl41]
+;cnst2:  = J(CC)  				[36 Hz]
 ;cnst21: Chemical shift offset for Ct   	[=o1p]
 ;cnst22: Chemical shift offset for Cp   	[ppm]
 ;cnst41: Chemical shift offset for Dt   	[=o4p]
@@ -299,21 +298,21 @@ ph31=0 2 2 0
 ;sp12:   90 time-reversed shaped pulse for Ct 	[Eburp2tr.1000]
 ;sp13:   90 degree shaped pulse for Cp        	[Eburp2.1000]
 ;sp14:   90 time-reversed shaped pulse for Cp 	[Eburp2tr.1000]
-;sp15:  180 inversion pulse for Ct            	[Reburp.1000]
-;sp16:  180 inversion pulse for Cp            	[Reburp.1000]
-;plw0:  Zero power 				[0W]
-;pl1:   High power 13C 
-;pl4:   High power 2H  
-;pl41:  2H decoupling
-;d16: delay for homospoil/gradient recovery     [200u]
-;inf1: 1/SW(X) = 2 * DW(X)
-;in0: 1/(2 * SW(X)) = DW(X)
-;nd0: 2
-;NS: 4 * n
-;DS: 32
-;l11: IPAP counter
+;sp15:   180 inversion pulse for Ct            	[Reburp.1000]
+;sp16:   180 inversion pulse for Cp            	[Reburp.1000]
+;plw0:   Zero power 				[0W]
+;pl1:    High power 13C 
+;pl4:    High power 2H  
+;pl41:   2H decoupling
+;d16:    delay for homospoil/gradient recovery 	[200u]
+;inf1:   1/SW(X) = 2 * DW(X)
+;in0:    1/(2 * SW(X)) = DW(X)
+;nd0:    2
+;NS:     4 * n
+;DS:     32
+;l11:    IPAP counter
 ;ap_flg: Flag for selecting in-phase or anti-phase
-;td1: number of experiments
+;td1:    number of experiments
 ;FnMODE: States-TPPI, TPPI, States or QSEQ
 
 ;for z-only gradients:

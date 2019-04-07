@@ -1,11 +1,11 @@
 ;
 ; Filename: ctcp_2d_2H_R1p_ipap 
 ;;
-; This sequence correlates the side chain carbon chemical shifts with the 
-; terminal (Ct) and penultimate (Cp) carbons in the following side chains:
+; This sequence correlates measures the R1rho of the terminal carbon (Ct) in 
+; the following side chains:
 ;    K Ce-Cd, R Cd-Cg, P Cd-Cg, I Cd1-Cg1, I Cg2-Cb, V Cg-Cb, T Cg-Cb
 ;;
-;    Schema: Ct -> [relax] -> Cp (t1) -> Ct (t2)
+;    Schema: Ct -> relax -> Cp (t1) -> Ct (t2)
 ;;
 ; Samples should be U-13C2H labelled
 ;   If the sample is 15N labelled then 15N ought to be decoupled during
@@ -26,12 +26,9 @@
 ;   PLW41   	power of 2H cwp decoupling (1000Hz)
 ;   cpd4	decoupling for t1 aliphatic CS evolution (broader band)
 ;   PLW42	power for cpd4
-;
 ;;
 ;-DAUTOCAL will calibrate the following from p1:
 ;   SPW11,12,13,14,15,16
-;;
-;"-DTOCSYPLANE omits the t2 evolution and records only the TOCSY plane"
 ;;
 ; Written by DFH / RP Feb 2019
 
@@ -46,11 +43,6 @@
 #include <Avance.incl>
 #include <Delay.incl>
 #include <Grad.incl>
-
-
-"d11=30m"
-"d12=15u"
-"d13=15u"
 
 ;define pulses
 define pulse pwc
@@ -68,6 +60,9 @@ define pulse pwd
        "pwd=p41"
 
 ;define delays
+"d11=30m"
+"d12=15u"
+"d13=15u"
 define delay taua
        "taua=1s/(cnst2*4.)"
 define delay TC
