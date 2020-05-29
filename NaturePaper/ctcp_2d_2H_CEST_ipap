@@ -1,0 +1,373 @@
+;
+; Filename: ctcp_2d_2H_CEST_ipap 
+;;
+; This sequence measures CEST from the terminal carbon (Ct) in the following 
+; side chains:
+;    K Ce-Cd, R Cd-Cg, P Cd-Cg, I Cd1-Cg1, I Cg2-Cb, V Cg-Cb, T Cg-Cb
+;;
+;    Schema: Cali (t1) ->CEST -> Cp (t1) -> Ct (t2)
+;;
+; Samples should be U-13C2H labelled
+;   If the sample is 15N labelled then 15N ought to be decoupled during
+;   acquisition but this is not possible with 2H decoupling (D+N=C).
+;   Decoupling in the indirect dimension is not necessary for these residues 
+;;
+; Set the following parameters
+;   O1P    	to the average chemical shift of Ct
+;   CNST22 	to the average chemical shift of Cp
+;   O4P    	to the average chemical shift of Dt (bonded to Ct)
+;   CNST42 	to the average chemical shift of Dp (bonded to Cp)
+;   CNST2  	to 1 bond 13C-13C coupling (36 Hz)
+;   P11/P13   	length of selective 90 pulses for Ct/Cp EBurp2 / EBurp2(tr)
+;   P15/P16	length of selective 180 pulses for Ct/Cp ReBurp
+;   P41    	2H flanking pulses (@pl41)
+;   PL17 	power for spin lock
+;   PLW41   	power of 2H cwp decoupling (1000Hz)
+;   cpd4	decoupling during CEST (broader band)
+;   PLW42	power for cpd4
+;
+;;
+;-DAUTOCAL will calibrate the following from p1:
+;   SPW11,12,13,14,15,16
+;;
+; Written by DFH / RP Feb 2019
+
+
+;$CLASS=HighRes
+;$DIM=2D
+;$TYPE=
+;$SUBTYPE=
+;$COMMENT=
+
+#include <Avance.incl>
+#include <Delay.incl>
+#include <Grad.incl>
+
+
+;define pulses
+define pulse pwc
+       "pwc=p1"
+define pulse pwc90_Ct
+       "pwc90_Ct=p11"
+define pulse pwc90_Cp
+        "pwc90_Cp=p13"
+define pulse pwc180_Ct
+       "pwc180_Ct=p15"
+define pulse pwc180_Cp
+       "pwc180_Cp=p16"
+define pulse pwc_cest
+       "pwc_cest=p17"
+define pulse pwd
+       "pwd=p41"
+
+;define delays
+"d11=30m"
+"d12=15u"
+"d13=15u"
+define delay taua
+       "taua=1s/(cnst2*4.)"
+
+define delay TC
+       "TC=1s/(cnst2*1.)"
+
+"in0=inf1/2"
+"d0=0.1u"
+
+define list<loopcounter> ap_flg = {0 1}
+"l11=0"
+define loopcounter maxtd
+"maxtd= 2.*trunc( ( TC*0.5 - pwc - d12 - 4u - d0)/in0)"
+
+define list<frequency> C13sat = <$FQ1LIST>
+
+"cnst21=o1/bf1"
+"cnst41=o4/bf4"
+
+;hard code zero power
+"plw0=0."
+
+;hard code offsets and spoals
+"spoal11=1"
+"spoffs11=0."
+"spoal12=0."
+"spoffs12=0."
+"spoal13=1."
+"spoffs13=0."
+"spoal14=0."
+"spoffs14=0."
+"spoal15=0.5"
+"spoffs15=0."
+"spoal16=0.5"
+"spoffs16=(cnst22-cnst21)*bf1/1000000."
+
+;calculate power levels 
+#ifdef AUTOCAL
+   "spw11=(pwc/pwc90_Ct)*(pwc/pwc90_Ct)*plw1/(0.05813*0.05813)"
+   "spw12=(pwc/pwc90_Ct)*(pwc/pwc90_Ct)*plw1/(0.05813*0.05813)"
+   "spw13=(pwc/pwc90_Cp)*(pwc/pwc90_Cp)*plw1/(0.05813*0.05813)"
+   "spw14=(pwc/pwc90_Cp)*(pwc/pwc90_Cp)*plw1/(0.05813*0.05813)"
+   "spw15=(pwc/pwc180_Ct)*(pwc/pwc180_Ct)*plw1/(0.041920*0.041920)"
+   "spw16=(pwc/pwc180_Cp)*(pwc/pwc180_Cp)*plw1/(0.041920*0.041920)"
+#endif
+
+;define constants to check power levels
+"cnst44=plw41"
+"cnst45=plw42"
+
+"acqt0=0.1u"
+
+1 ze
+  if "td1>maxtd" 
+  {
+    20u
+    print "ERROR: TD1 too large"
+    goto HaltAcqu
+  }
+  if "pwc_cest < 1000u"
+  {
+     20u
+     print "ERROR: CEST strength too high"
+     goto HaltAcqu
+  }
+  if "pwd<200u"
+  {
+    20u
+    print "ERROR: Deuterium decoupling power too high"
+    goto HaltAcqu
+  }
+  if "cnst44>6.5"
+  {
+    20u
+    print "ERROR: Deuterium decoupling power too high"
+    goto HaltAcqu
+  }
+  if "cnst45>2.5"
+  {
+    20u
+    print "ERROR: Deuterium decoupling power too high"
+    goto HaltAcqu
+  }
+
+
+  d11 LOCKDEC_ON
+  50u LOCKH_ON
+  d11 H2_PULSE
+  d12 pl41:f4
+
+2 d11 do:f4
+  d11 H2_LOCK
+; wait for the lock to stabilise before starting to lock
+  d1*0.33
+  6m LOCKH_OFF
+  d1*0.67
+  50u LOCKH_ON
+  d12 H2_PULSE
+
+  30u fq=cnst21(bf ppm):f1				; CS Ct
+  50u UNBLKGRAMP				
+  30u fq=cnst41(bf ppm):f4				; CS Dt
+
+  d12 pl0:f1
+
+  (pwc90_Ct:sp11 ph10):f1
+  4u
+  (pwc90_Ct:sp12 ph1):f1
+  4u
+
+; BEGIN - CEST 
+  if "abs(C13sat)>10000Hz" {
+    d12 pl0:f1
+  } else {
+    d12 pl17:f1 pl42:f4
+  }
+  30u fq=C13sat:f1					; CS cest
+  d12 cw:f1 cpd4:f4
+  if "abs(C13sat)>10000Hz" {
+    d12 
+  } else {
+    d17
+  }  
+  d12 do:f1 do:f4
+; END - CEST
+
+  30u fq=cnst21(bf ppm):f1				; CS Ct
+  d12 pl0:f1 pl41:f4
+  50u UNBLKGRAMP
+
+;  GRADIENT START
+  p51:gp1
+  d16
+
+; Start deuterium decoupling
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph2
+;
+  (pwc90_Ct:sp11 ph10):f1
+  4u
+  d12 pl1:f1
+  "DELTA=taua-4u-d12-pwc"
+  DELTA
+  (pwc*2 ph10):f1
+  "DELTA=taua-4u-d12-pwc"
+  DELTA
+  d12 pl0:f1
+  4u
+  (pwc90_Ct:sp12 ph11):f1
+;
+; Stop deuterium decoupling
+  d13 do:f4
+  (pwd ph13):f4
+;
+  30u fq=cnst22(bf ppm):f1				; CS Cp
+  d12 pl0:f1
+
+;  GRADIENT START
+  p52:gp2
+  d16
+
+; Start deuterium decoupling
+  30u fq=cnst42(bf ppm):f4				; CS Dp
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph2
+;
+; Chemical shift evolution
+  (pwc90_Cp:sp13 ph4):f1
+  4u
+  d12 pl1:f1
+  "DELTA=TC*0.5+d0-4u-d12-pwc"
+  DELTA
+  (pwc*2 ph2):f1  
+  d12 pl0:f1
+  "DELTA=TC*0.5-d0-4u-d12-pwc"
+  DELTA
+  4u
+  (pwc90_Cp:sp14 ph2):f1
+
+; Stop deuterium decoupling
+  d13 do:f
+ 
+  (pwd ph13):f4
+  d12
+;
+; GRADIENT START
+  p53:gp3
+  d16
+
+  30u fq=cnst21(bf ppm):f1 pl0:f1			; CS Ct
+  d13 BLKGRAMP	
+;
+; Start deuterium decoupling (this will be kept on during acq)
+  30u fq=cnst41(bf ppm):f4  pl41:f4			; CS Dt
+  (pwd ph11):f4
+  d13
+  d13 cw:f4 ph2
+;
+  if "ap_flg[l11]>0" {
+    (pwc90_Ct:sp11 ph13):f1
+    4u
+    d12 pl0:f1
+    "DELTA=taua-4u-d12"
+    DELTA
+    (pwc180_Cp:sp16 ph2):f1
+    4u
+    (pwc180_Ct:sp15 ph2):f1
+    4u
+    (pwc180_Cp:sp16 ph2):f1
+    "DELTA=taua-d12-4u"
+    DELTA
+  } else {
+    (pwc90_Ct:sp11 ph10):f1
+    4u
+    d12 pl0:f1
+    "DELTA=taua-4u-d12"
+    DELTA
+    (pwc180_Cp:sp16 ph2):f1
+    4u
+    (pwc180_Ct:sp15 ph2):f1
+    4u
+    "DELTA=taua-d12-4u"
+    DELTA
+    (pwc180_Cp:sp16 ph2):f1
+  }
+
+;
+; ACQUISITION
+  go=2 ph31 
+  d11 do:f4 mc #0 to 2
+	F3QF(calclc(l11,1))
+	F2QF(calclist(C13sat,1))
+	F1PH(calph(ph4,+90),caldel(d0,+in0))
+
+  d11 H2_LOCK
+  d11 LOCKH_OFF
+  d11 LOCKDEC_OFF
+
+;so we can loop to the end.. 
+HaltAcqu, 1m
+stop, exit
+
+ph1= 0 0 2 2 
+ph2= 0
+ph4= 0 2
+
+ph10=0
+ph11=1
+ph12=2
+ph13=3
+
+;receiver pulse
+ph31=0 2 2 0
+
+
+;p1:     pwc 					[hard 90]
+;p11:    pwc90_Ct   90 degree shaped pulse for Ct
+;p13:    pwc90_Cp   90 degree shaped pulse for Cp
+;p15:    pwc180_Ct  180 degree shaped pulse for Ct
+;p16:    pwc180_Cp  180 degree shaped pulse for Cp
+;p41:    pwd					[flanking pulse, pl41]
+;cnst2:  =J(CC)  				[36 Hz]
+;cnst21: Chemical shift offset for Ct   	[=o1p]
+;cnst22: Chemical shift offset for Cp   	[ppm]
+;cnst41: Chemical shift offset for Dt   	[=o4p]
+;cnst42: Chemical shift offset for Dp   	[ppm]
+;o1p:    Ct chemical shift offset          	[ppm]
+;o4p:    Dt chemical shift offset          	[ppm]
+;sp11:   90 degree shaped pulse for Ct       	[Eburp2.1000]
+;sp12:   90 time-reversed shaped pulse for Ct 	[Eburp2tr.1000]
+;sp13:   90 degree shaped pulse for Cp        	[Eburp2.1000]
+;sp14:   90 time-reversed shaped pulse for Cp 	[Eburp2tr.1000]
+;sp15:   180 inversion pulse for Ct            	[Reburp.1000]
+;sp16:   180 inversion pulse for Cp            	[Reburp.1000]
+;plw0: 	 Zero power 				[0W]
+;pl1:    High power 13C 
+;pl17:	 13C CEST saturation power
+;pl41:	 power for CW decoupling		[1000Hz]
+;pl42:	 2H decoupling during CEST 		[??Hz]?
+;d16: 	 delay for homospoil/gradient recovery  [200u]
+;inf1: 	 1/SW(X) = 2 * DW(X)
+;in0: 	 1/(2 * SW(X)) = DW(X)
+;nd0: 	 2
+;NS: 	 4 * n
+;DS: 	 32
+;l11:    IPAP counter
+;ap_flg: Flag for selecting in-phase or anti-phase
+;td1: 	 number of experiments
+;FnMODE: States-TPPI, TPPI, States or QSEQ
+;cpd4:   2H decoupling during CEST		[WALTZ-16]
+
+;for z-only gradients:
+;gpz1: 7 %
+;gpz2: 17 %
+;gpz3: 33 %
+;gpz4: 13 %
+
+;use gradient files:
+;gpnam1: SINE.100
+;gpnam2: SINE.100
+;gpnam3: SINE.100
+
+;preprocessor-flags-start
+
+

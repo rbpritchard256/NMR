@@ -1,0 +1,560 @@
+;;
+; Filename: cecd_JCN_2H_ipap_600_rd
+;
+; Variation on: Grzesiek et al (1993) J Biol NMR 3:487-493  
+;               Vuister et al (1993) JACS 115:5334-5335
+;
+;
+;   THIS BIT MIGHT BE WRONG
+;
+;
+; This sequence performs the following experiment
+;     Cd -> Cg -> t1(Cg) +/- JCg-(N/Ne) -> Cd with IPAP fiter -> acq (Cd)
+;     for Arg 
+;     Ce -> Cd -> t1(Cd) +/- JCg-(N/Nz) -> Ce with IPAP fiter -> acq (Ce)
+;     for Lys
+;
+;       1 bond couplings are refocussed by setting the full t1/coupling 
+;       period to an even multiple of 1/(JCC).
+;       NOTE: TC is coded to occur twice
+;     
+; Samples should be U-13C15N2H labelled
+;
+; Set the following parameters:
+;   CNST21 = Cd/Ce CS (43ppm)
+;   CNST22 = Cg/Cd CS (28ppm)
+;   CNST23 = CO/Cz CS (170ppm)
+;   CNST24 = Cali CD (~35/40ppm)
+;   O3P    = Selected N freq
+;   CNST41 = Hg CS (1.55ppm)
+;   O4P    = Hd CS (3.1ppm)
+;   CNST2  = 1JCC = 35.5 Hz (taua = 1/4*35.5)
+;   TC     = 28.6ms (1/JCC) (can also be 14.3 if relaxation more of an issue)
+;   
+; The following selective pulses should be checked:
+;   Cg E-Burp / E-BurpTR / ReBurp
+;   Cd E-Burp / E-BurpTR / ReBurp
+;   CO ReBurp
+;   (p41 (deut decoupling))
+;   (cpd4 (deut decoupling))
+;
+;   R Dingle May 2018
+;
+;$CLASS=HighRes
+;$DIM=2D
+;$TYPE=
+;$SUBTYPE=
+;$COMMENT=
+
+#include <Avance.incl>
+#include <Delay.incl>
+#include <Grad.incl>
+
+;
+;DEFINE PULSES
+;
+define pulse pwc
+       "pwc=p1"			; 13C hard pulse at power pl2
+define pulse pwc90_cg		; 13Cg 90
+       "pwc90_cg=p13"	
+define pulse pwc_cg		; 13Cg 180
+       "pwc_cg=p16"	
+define pulse pwc_cali		; 13Cali 180
+       "pwc_cali=p19"
+define pulse pwc90_cd
+       "pwc90_cd=p11"		; 13Cd 90	
+define pulse pwc_cd
+       "pwc_cd=p15"		; 13Cd 180
+	define pulse pwc_CO
+       "pwc_CO=p17"		; 13CO 180
+define pulse pwn_sel
+       "pwn_sel=p30"		; selective N pulse 
+
+;
+; DEFINE DELAYS
+;
+define delay taua
+       "taua=1s/(cnst2*4)"  	; 1/(4JCC) = 1/4*35.5 = 7ms
+define delay TC
+        "TC=d20"	    	; constant time deay
+define delay flopsytime
+"flopsytime=188.448*p6*l1"
+
+"in0=inf1/2"
+"d0=0.1u"
+"d11=30m"
+"d12=15u"
+"d13=15u"
+"d30=p30"
+
+;
+; OFFSET AND SPOALS
+;
+"spoal11=1."
+"spoffs11=0."
+"spoal12=0."
+"spoffs12=0."
+"spoal13=1."
+"spoffs13=0."
+"spoal14=0."
+"spoffs14=0."
+"spoal15=0.5"
+"spoffs15=0."
+"spoal16=0.5"
+"spoffs16=(cnst22-cnst21)*bf1/1000000."
+; (CG - CD) * bf1/1000000
+"spoal17=0.5"
+"spoffs17=(cnst23-cnst22)*bf1/1000000."
+; (CO - CG) * bf1/1000000
+"spoal19=0.5"
+"spoffs19=(cnst24-cnst22)*bf1/1000000."
+; (Cali - CG) * bf1/1000000
+"spoal30=0.5"
+"spoffs30=0.0"
+
+
+"plw0=0."
+"plw30=0."
+
+;
+; DEFINE LOOPCOUNTERS
+;
+define list<loopcounter> n_flg= {0 1}
+define list<loopcounter> ap_flg= {0 1}
+
+
+"acqt0=0.1u"
+
+1 ze
+  d11 LOCKDEC_ON
+  50u LOCKH_ON
+  d11 H2_PULSE
+
+2 d11 do:f3 do:f4
+  d11 H2_LOCK
+  d1*0.33
+  6m LOCKH_OFF
+  d1*0.67
+
+  50u LOCKH_ON
+  d12 H2_PULSE
+
+#ifdef FLOPSY
+  30u fq=cnst24(bf ppm):f1
+  d12 pl10:f1
+4 p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph21
+  p6*1.067 ph22
+  p6*1.822 ph23
+  p6*1.767 ph24
+  p6*1.444 ph25
+  p6*1.767 ph24
+  p6*1.822 ph23
+  p6*1.067 ph22
+  p6*0.511 ph21
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+
+  p6*0.511 ph26
+  p6*1.067 ph27
+  p6*1.822 ph28
+  p6*1.767 ph29
+  p6*1.444 ph30
+  p6*1.767 ph29
+  p6*1.822 ph28
+  p6*1.067 ph27
+  p6*0.511 ph26
+  lo to 4 times l1
+;--------------end FLOPSY-16
+#endif 
+
+  d12 pl0:f1 pl41:f4		; Power 0 in C, set for deut
+  d12 pl30:f3			; N power 
+
+  30u fq=cnst21(bf ppm):f1	; CS FLOPSY -> Cd
+
+  50u UNBLKGRAMP
+  30u fq=0:f4			; Sets to O4P
+;
+; Start 2H decoupling
+  (p41 ph11):f4
+  d13
+  d13 cpd4:f4 ph10
+
+;
+; FIRST INEPT
+;
+
+4u
+(pwc90_cd:sp11 ph1):f1
+4u
+d12 pl1:f1			; Power C hard
+"DELTA = taua - 4u - d12 - pwc"
+DELTA
+(pwc*2 ph10):f1
+"DELTA = taua - 4u - d12 - pwc"
+DELTA
+d12 pl0:f1			; Power Cd E-Burp
+4u
+(pwc90_cd:sp12 ph11):f1
+4u
+;
+; Turn off 2H decoupling // Gradient
+;
+  d13 do:f4
+  (p41 ph13):f4
+
+  30u fq=cnst22(bf ppm):f1	; CS ->  Cg
+  d12 pl0:f1			; Power 0 C
+  4u
+  p51:gp1
+  d16
+
+;
+; Start 2H decoupling
+;
+  30u fq=cnst42(bf ppm):f4	; needed? Put cnst42 to Hg(ppm)
+
+  (p41 ph11):f4
+  d13
+  d13 cpd4:f4 ph10
+;
+; JCC ELEMENT + CT CS EVOLUTION
+;
+4u
+(pwc90_cg:sp13 ph4):f1
+4u
+d0				; t1 / 2
+d12 pl0:f1 pl30:f3
+
+if "n_flg > 0" {
+  4u
+  (pwn_sel:sp30 ph10):f3
+  4u
+  (pwc_CO:sp17 ph10):f1
+  4u
+  "DELTA = TC - 4u - d12 - 4u - pwn_sel - 4u - pwc_CO - 4u - 4u - 0.5*(pwc_cali) "
+  DELTA pl0:f1
+  4u
+  (pwc_cali:sp19 ph10):f1
+  4u
+  "DELTA = TC - d0 - 0.5*(pwc_cali) - 4u - 4u - pwc_CO - 4u - pwn_sel - 4u - d12 -4u"
+  DELTA pl0:f1
+
+} else { ;"n_flg > 0"
+  4u
+  d30 ; compensating N pulse
+  4u
+  (pwc_CO:sp17 ph10):f1
+  4u
+  "DELTA = TC - 4u - d12 - 4u - d30 - 4u - pwc_CO - 4u - 4u - pwn_sel - 4u - 0.5*(pwc_cali) "
+  DELTA pl0:f1
+  4u
+  (pwn_sel:sp30 ph10):f3
+  4u
+  (pwc_cali:sp19 ph10):f1
+  4u
+  "DELTA = TC - d0 - 0.5*(pwc_cali) - 4u - 4u - pwc_CO - 4u - pwn_sel - 4u -d12 - 4u"
+  DELTA pl0:f1
+}
+
+4u
+(pwc_CO:sp17 ph3):f1
+4u
+(pwn_sel:sp30 ph10):f3
+4u
+d12 pl0:f1
+4u
+(pwc90_cg:sp14 ph10):f1		; Now CzCz
+4u
+
+;
+; Turn off 2H decoupling //  Gradient
+;
+  d13 do:f4
+  (p41 ph13):f4
+
+  30u fq=cnst21(bf ppm):f1	; CS ->  Cd
+  30u fq=0:f4			; Sets to O4P
+  4u
+  p52:gp2
+  d16
+
+;
+; Start deuterium decoupling
+;
+
+  d13 BLKGRAMP
+  (p41 ph11):f4
+  d13
+  d13 cpd4:f4 ph11
+
+;
+; IPAP FILTER
+;
+4u
+(pwc90_cd:sp11 ph13):f1
+4u
+d12 pl0:f1
+if "ap_flg>0" {
+  "DELTA=taua - 4u - d12 - 4u"
+  DELTA
+  4u
+  (pwc_cg:sp16 ph10):f1
+  4u
+  (pwc_cd:sp15 ph10):f1
+  4u
+  (pwc_cg:sp16 ph10):f1
+  4u
+  "DELTA=taua - 4u"
+  DELTA
+} 
+else {
+  "DELTA=taua - 4u - d12 - 4u"
+  DELTA
+  4u
+  (pwc_cg:sp16 ph10):f1
+  4u				 
+  (pwc_cd:sp15 ph10):f1
+  4u	 
+  "DELTA=taua - 4u"
+  DELTA
+  4u
+  (pwc_cg:sp16 ph10):f1
+}
+;
+;
+; ACQUISITION
+  go=2 ph31 
+  d11 do:f3 do:f4 mc #0 to 2 	; 
+	F3QF(calclist(ap_flg,1))
+        F2QF(calclist(n_flg,1))
+	F1PH(calph(ph4,+90),caldel(d0,+in0))
+
+  d11 H2_LOCK
+  d11 LOCKH_OFF
+  d11 LOCKDEC_OFF
+
+stop, exit
+
+;
+; PHASES
+;
+ph1  = 0 0 2 2 			;(from IPAP)
+ph4  = 0 2 			;(from CgN)
+ph3  = 0 0 0 0 2 2 2 2 		;(from CgN)
+
+
+;FLOPSY pulses
+ph26=(720) 0
+ph27=(720) 90
+ph28=(720) 135
+ph29=(720) 630
+ph30=(720) 45
+
+ph21=(720) 360
+ph22=(720) 450
+ph23=(720) 495
+ph24=(720) 270
+ph25=(720) 405
+;
+
+
+
+ph10 = 0
+ph11 = 1
+ph12 = 2
+ph13 = 3
+
+ph31 = 0 2 2 0
+
+
+;pwc		C 90 hard pulse
+;pwc90_Cg	Cg 90 sel
+;pwc90_Cd	Cd 90 sel
+;pwc_Cg		Cg 180 sel
+;pwc_Cd		Cd 180 sel	
+;pwc_CO		CO 180 sel
+;pwn_sel	N selective - adjusted to evolve different couplings
+;
+;p1		length C 90 hard pulse
+;p11		length Cd 90 sel
+;p13		length Cg 90 sel
+;p15		length Cd 180 sel
+;p16		length Cg 180 sel
+;p17		length CO 180 sel
+;p30		length N 180 sel
+;
+;pl1		C hard pulse
+;pl11		Cd 90 sel (fwd+back)
+;pl13		Cg 90 sel (fwd+back)
+;pl15		Cd 180 sel 
+;pl16		Cg 180 sel 
+;pl17		CO 180 sel
+;pl30		N 180 sel
+;
+;sp11		EBurp Cd
+;sp12		EBurp TR Cd
+;sp13		EBurp Cg
+;sp14		EBurp TR Cg
+;sp15		ReBurp Cd
+;sp16		ReBurp Cg
+;sp17		ReBurp CO
+;sp30		ReBurp N
+;
+;
+;
+;CNST2 		1JCC = 35.5Hz
+;CNST21		CS Cd = 43ppm (41-46 T4L)
+;CNST22		CS Cg = 28ppm (25-30 T4L, 25-37ali T4L)
+;CNST23		CS CO = 170ppm (broad)
+;
+;p41		
+;cpd4		
+;CNST42		CS of Hg
+;
+;taua		1/(4*JCgCd) = 1/(4*CNST2) = 1/(4*35.5)
+;TC		CT period = 28.6ms or 14.3ms (more points vs less relax)
+;
+;n_flg		refocus or evolve selected >1JCX
+;ap_flg		IP/AP filter loop
+
+
+
