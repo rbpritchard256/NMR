@@ -1,6 +1,9 @@
 class InitializationError(Exception): pass
 
 class StateMachine:
+  '''
+  Initially taken from https://www.python-course.eu/finite_state_machine.php
+  '''
   def __init__(self):
     self.handlers = {}
     self.startState = None
@@ -31,3 +34,15 @@ class StateMachine:
       else:
         handler = self.handlers[newState.upper()]
     return cargo
+
+''' 
+original lines 28-end were:		(currently can't recall why I changed this)
+   
+        while True:
+            (newState, cargo) = handler(cargo)
+            if newState.upper() in self.endStates:
+                print("reached ", newState)
+                break 
+            else:
+                handler = self.handlers[newState.upper()]              
+'''

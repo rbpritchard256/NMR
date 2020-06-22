@@ -1,4 +1,4 @@
-from Dict import resDict
+from Dict import resDict_1to3
 
 class Molecule:
     def __init__(self, name='', numRes=0, seq='', Residues=[], seqNote='', pAssigned=0.0):
@@ -16,9 +16,11 @@ class Molecule:
         print('Sequence:\n{}'.format(self.seq))
 
     def initialise(self):
-        c = 1
+        c = 1						
+		# Here residue numbering is simply in *this* seq, 
+		# discrepencies with uniprot handled elsewhere
         for r in self.seq:
-            self.Residues.append(Residue(resDict[r],c,{}))
+            self.Residues.append(Residue(resDict_1to3[r],c,{}))
             c += 1
 
     def listAtoms(self): 
@@ -70,6 +72,19 @@ class Residue:
                    
 
 class Atom:
+    """
+    Class object for atoms
+        self
+        name        specific atom name          str 
+                      eg C, CA, HG11
+        atype       atom type                   str 
+                      eg C, H, O
+        CS          chemical shift              float
+                !!!   currently no note of referencing, CH/CD etc 
+        ( CS_var    chemical shift variation    tuple of floats )
+                !!!   Not yet implemented
+    """
+
     def __init__(self, name, atype, CS, CS_var=(float('NaN'),float('NaN'))):
         self.name = name
         self.atype = atype
@@ -77,6 +92,9 @@ class Atom:
         self.CS_var = CS_var  # not played with this yet
 
     def describe(self):
+        """
+        Prints atom details (name and CS) to screen
+        """
         print('\t{}\t {}'.format(self.name, self.CS))
 
 
