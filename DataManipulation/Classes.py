@@ -2,49 +2,57 @@ from Dict import resDict
 import sys
 
 class Molecule:
-    def __init__(self, name='', numRes=0, seq='', Residues=[], seqNote='', pAssigned=0.0):
-        self.name = name
-        self.numRes = numRes
+    """
+    Class object for Molecules
+        self
+        name        molecule name                                 str 
+        numRes      number of residues (this construct)           int 
+        seq         sequence (this construct)                     str
+        Residues	Residue object for each residue in seq        array
+        UniProtNum  UniProt number for the full protein           int
+        seqNote     Any other notes for this sequence/construct   str                    
+    """
+
+    def __init__(self, name='', numRes=0, seq='', Residues=[], UniProtNum=-1, seqNote='', pAssigned=0.0):
+        self.name = str(name)
+        self.numRes = int(numRes)
         self.seq = seq
         self.Residues = Residues
-        self.seqNote = seqNote
-        self.pAssigned = pAssigned # not played with this yet
+        self.UniProtNum = int(UniProtNum)
+        self.seqNote = str(seqNote)
+#        self.pAssigned = pAssigned # not played with this yet
 
     def describe(self):
-        print('Name: {}'.format(self.name))
-        print('Number of residues: {}'.format(self.numRes))
-        print('Sequence note: {}'.format(self.seqNote))
-        print('Sequence:\n{}'.format(self.seq))
+        """
+        Describes the molecule (name, number of resiudes, any notes, sequence)
+        """
+        print(f'Molecule: {self.name}\n\tNumRes: {self.numRes}\n\tSequence note: {seqNote}\n\tSequence: {seq}'
 
     def initialise(self):
+        """
+        Creates a Residue object for every residue in the sequence of *this* construct (self.seq)
+        Discrepencies with the full protein numbering (artefacts, fragments) are handled at the resiude level.
+        """
         c = 1						
-		# Here residue numbering is simply in *this* seq, 
-		# discrepencies with uniprot handled elsewhere
         for r in self.seq:
-            self.Residues.append(Residue(resDict_1to3[r],c,{}))
+            self.Residues.append(Residue(resDict_1to3[r],c,-1,{}))
             c += 1
 
     def listAtoms(self): 
+        """
+        Lists all the atoms in the molecule  
+        """
         for r in self.Residues:
-            print('{} {}'.format(r.name, r.num))
-            if len(r.Atoms) >0:
-                for a in r.Atoms:
-                    r.Atoms[a].describe()
-            else:
-                pass
-#                print('\tNone')
+            r.describe()
+            r.listAtoms()
 
-    def addAtom(self, a, val):
-        # Adds Atom objects to a residue defined by its number in the sequence (val)
-        self.Residues[val].addAtom(a)
-
-    def countAtoms(self): 
-        # counts all assigned atoms in the molecule
-        c = 0
-        for r in self.Residues:
-             for a in r.Atoms:
-                 c += 1
-        print('There are {} chemical shifts.'.format(c))
+#    def countAtoms(self): 
+#        # counts all assigned atoms in the molecule
+#        c = 0
+#        for r in self.Residues:
+#             for a in r.Atoms:
+#                 c += 1
+#        print('There are {} chemical shifts.'.format(c))
 
 class Residue:
     """
@@ -53,6 +61,7 @@ class Residue:
         name        residue name                      str 
         num         residue number                    int 
         realNum     real residue number (authSeqID)   int
+                      should be the number from the full UniProt sequence
                       accounts for fragment nature / cloning artifacts
         Atoms       atom objects for this residue     dict
                     
@@ -77,11 +86,11 @@ class Residue:
         for a in self.Atoms:
            self.Atoms[a].describe()
 
-#    def addAtom(self, a):
-#        """
-#        Lists the atom in the residue (giving name and CS)
-#        """
-#        self.Atoms[a.name] = a    
+    def addAtom(self, a):
+        """
+        Adds an atom object to the dictionary of atoms in a Residue
+        """
+        self.Atoms[a.name] = a    
 
 
 #    def checkExists(self, atoms):
