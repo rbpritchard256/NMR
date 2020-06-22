@@ -1,4 +1,5 @@
-from Dict import resDict_1to3
+from Dict import resDict
+import sys
 
 class Molecule:
     def __init__(self, name='', numRes=0, seq='', Residues=[], seqNote='', pAssigned=0.0):
@@ -46,30 +47,50 @@ class Molecule:
         print('There are {} chemical shifts.'.format(c))
 
 class Residue:
-    def __init__(self, name, num=-1, Atoms={}):
-        self.name = name
-        self.num = num
+    """
+    Class object for residues
+        self
+        name        residue name                      str 
+        num         residue number                    int 
+        realNum     real residue number (authSeqID)   int
+                      accounts for fragment nature / cloning artifacts
+        Atoms       atom objects for this residue     dict
+                    
+    """
+
+    def __init__(self, name, num=-1, realNum=-1, Atoms={}):
+        self.name = str(name)
+        self.num = int(num)
+        self.realNum = int(realNum)
         self.Atoms= Atoms
 
     def describe(self):
-        print('Name: {}'.format(self.name))
-        print('Number: {}'.format(self.num))
+        """
+        Prints residue name, number and real number to screen
+        """
+        print(f'Residue: {self.name:5} {self.num:5} ({self.realNum} in full protein)')
 
     def listAtoms(self):
+        """
+        Lists the atom in the residue (giving name and CS)
+        """
         for a in self.Atoms:
            self.Atoms[a].describe()
 
-    def addAtom(self, a):
-        self.Atoms[a.name] = a    
+#    def addAtom(self, a):
+#        """
+#        Lists the atom in the residue (giving name and CS)
+#        """
+#        self.Atoms[a.name] = a    
 
 
-    def checkExists(self, atoms):
-        result = False
-        if len(self.Atoms) >0:
-            if set(atoms).issubset(self.Atoms.keys()):
-                result = True
-        return result
-                   
+#    def checkExists(self, atoms):
+#        result = False
+#        if len(self.Atoms) >0:
+#            if set(atoms).issubset(self.Atoms.keys()):
+#                result = True
+#        return result
+
 
 class Atom:
     """
