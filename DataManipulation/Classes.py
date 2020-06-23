@@ -1,4 +1,4 @@
-from Dict import resDict
+from Dict import resDict_1to3
 import sys
 
 class Molecule:
@@ -9,16 +9,16 @@ class Molecule:
         numRes      number of residues (this construct)           int 
         seq         sequence (this construct)                     str
         Residues	Residue object for each residue in seq        array
-        UniProtNum  UniProt number for the full protein           int
+        uniProtCode UniProt code for the full protein             str
         seqNote     Any other notes for this sequence/construct   str                    
     """
 
-    def __init__(self, name='', numRes=0, seq='', Residues=[], UniProtNum=-1, seqNote='', pAssigned=0.0):
+    def __init__(self, name='', numRes=0, seq='', Residues=[], uniProtCode='', seqNote='', pAssigned=0.0):
         self.name = str(name)
         self.numRes = int(numRes)
         self.seq = seq
         self.Residues = Residues
-        self.UniProtNum = int(UniProtNum)
+        self.uniProtCode = str(uniProtCode)
         self.seqNote = str(seqNote)
 #        self.pAssigned = pAssigned # not played with this yet
 
@@ -26,7 +26,7 @@ class Molecule:
         """
         Describes the molecule (name, number of resiudes, any notes, sequence)
         """
-        print(f'Molecule: {self.name}\n\tNumRes: {self.numRes}\n\tSequence note: {seqNote}\n\tSequence: {seq}'
+        print(f'\n{self.name}\n\tNumRes: {self.numRes}\n\tSequence note: {self.seqNote}\n\tSequence: {self.seq}')
 
     def initialise(self):
         """
@@ -111,15 +111,12 @@ class Atom:
                       eg C, H, O
         CS          chemical shift              float
                 !!!   currently no note of referencing, CH/CD etc 
-        ( CS_var    chemical shift variation    tuple of floats )
-                !!!   Not yet implemented
     """
 
-    def __init__(self, name, atype, CS, CS_var=(float('NaN'),float('NaN'))):
+    def __init__(self, name, atype, CS):
         self.name = name
         self.atype = atype
         self.CS = CS
-        self.CS_var = CS_var  # not played with this yet
 
     def describe(self):
         """
