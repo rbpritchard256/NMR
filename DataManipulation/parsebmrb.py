@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 from statemachine import StateMachine
-import os,sys
+import os,sys, argparse
 from Classes import *
 
 def start(f): 
     # Tests the state of the file 
-    print('--------------------------------------------------------------------------------\nNOTE: This program currently takes *not* account of duplicate CS recordings\n      for a single atom\n--------------------------------------------------------------------------------')
+    print(f'\n\n     STARTING to read {f} \n--------------------------------------------------------------------------------\nNOTE: This program currently doesn\'t take account of duplicate CS recordings for\n      a single atom\n--------------------------------------------------------------------------------')
     newstate = 'tmp'
     try:
         if os.stat(f).st_size == 0:
@@ -14,11 +14,11 @@ def start(f):
         elif os.stat(f).st_size != 0:
             newstate = "open_file"
         else:
-            sys.exit('This should not happen')
+            sys.exit('Error: This should not be possible')
     except OSError:
         newstate = "no_file"
     if newstate == 'tmp': #really shouldn't happen
-        sys.exit('Something is wrong in parsebmrb.start(f). Should have overwritten newstate = \'tmp\'')
+        sys.exit('Error: Something is wrong in parsebmrb.start(f). Should have overwritten newstate = \'tmp\'')
     return (newstate, f)
 
 def open_file(f):
@@ -46,6 +46,13 @@ def read_lines(cargo):
             r = ('get_headers', (f, fi, molecule))
             break
 
+        if '_Assembly.Number_of_components' in line: # check only one molecule in file
+            print(line.split()[1] )
+            if line.split()[1] == '.': # this is sometimes used instead of 1, currently assuming they are equal
+                pass
+            elif int(line.split()[1]) > 1:
+                sys.exit('Error: two molecules in this file. Currently can\'t handle that')
+            
         if '_Entity.Name' in line: # get molecule name
             molecule.name = get_info(line)
         if line.strip() == '_Entity.Polymer_seq_one_letter_code': # get sequence
@@ -76,26 +83,43 @@ def get_headers(cargo):
 def get_CS(cargo): 
     # Gets the CS for each atom
     f, fi, molecule, headers = cargo[0], cargo[1], cargo[2], cargo[3]
-    print('WARNING: Residue.addAtoms has an issue if there are any unassigned CSs')
+    print('WARNING: Residue.addAtoms has an issue if there are any unassigned CSs\n--------------------------------------------------------------------------------')
     molecule.initialise() # create a list of residue objects for each residue in molecule.seq
-    inCS = True
+    inCS,firstLine = True, True
     id_rNum = headers.index('_Atom_chem_shift.Seq_ID')
+    id_rName = headers.index('_Atom_chem_shift.Comp_ID')
     id_aName = headers.index('_Atom_chem_shift.Atom_ID')
     id_aType = headers.index('_Atom_chem_shift.Atom_type')
     id_CS = headers.index('_Atom_chem_shift.Val')
     authResNum = headers.index('_Atom_chem_shift.Auth_seq_ID')
-    id_rNum_old = ''
+    rNum_old = -9999
     for line in fi:
         if line.strip() == 'stop_':
             inCS = False
             break
         if inCS == True:
             tokens=line.split()
-            if id_rNum != id_rNum_old:
-               molecule.Residues[int(tokens[id_rNum])-1].realNum = int(tokens[authResNum])
-            resNum = int(tokens[id_rNum])-1
-            a = Atom(tokens[id_aName],tokens[id_aType],float(tokens[id_CS]))
-            molecule.Residues[id_rNum].addAtom(a)
+            if len(tokens) != len(headers):
+                sys.exit(f'Error: There is an issue in the CS data, fewer entries than tokens for line: {line}')
+            rNum, rName = int(tokens[id_rNum]), tokens[id_rName]
+            aName, aType, CS = tokens[id_aName], tokens[id_aType], float(tokens[id_CS])
+            if molecule.Residues[rNum].name != rName:
+                sys.exit(f'Error: There is a discrepency between residue number in the CS list and the residue type in the 3-letter sequence in line:\n{line}')
+            if firstLine == True:
+                rNum_old = rNum
+                molecule.Residues[rNum].realNum = tokens[authResNum]
+                a = Atom(aName, aType, CS)
+                molecule.Residues[rNum].addAtom(a)
+                firstLine = False
+            elif rNum != rNum_old:
+                molecule.Residues[rNum].realNum = tokens[authResNum]
+                a = Atom(aName, aType, CS)
+                molecule.Residues[rNum].addAtom(a)
+                rNum_old = rNum
+            else:
+                a = Atom(aName, aType, CS)
+                molecule.Residues[rNum].addAtom(a)
+
         else:
             break
     return ('read_lines',(f, fi, molecule))
@@ -128,6 +152,8 @@ def get_sequence(cargo):
     # Imports the *single letter* sequence of this construct (spans several lines)
     f, fi, molecule = cargo[0], cargo[1], cargo[2]
     seq, inseq = '', True
+    if molecule.seq != '':
+        sys.exit('Error: two sequences given file. Currently can\'t handle that')
     for line in fi:
         if line.strip() == ';':
             inseq = False
@@ -174,6 +200,12 @@ def parseBMRB(f):
 
 
 if __name__== "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', type=str, help='Input BMRB file (NMRStar 3.1 only)', action='store', dest='filename')
+    args = parser.parse_args()
+    f = args.filename
+
     m = StateMachine()
     m.add_state("Start", start)
     m.add_state("open_file", open_file)
@@ -186,5 +218,5 @@ if __name__== "__main__":
     m.add_state("empty_file", empty_file)
     m.add_state("no_file", no_file)
     m.set_start("Start")
-    a = m.run('26012_3.1')[2]
+    a = m.run(f)[2]
     a.describe()

@@ -8,12 +8,12 @@ class Molecule:
         name        molecule name                                 str 
         numRes      number of residues (this construct)           int 
         seq         sequence (this construct)                     str
-        Residues	Residue object for each residue in seq        array
+        Residues	Residue object for each residue in seq        dict
         uniProtCode UniProt code for the full protein             str
         seqNote     Any other notes for this sequence/construct   str                    
     """
 
-    def __init__(self, name='', numRes=0, seq='', Residues=[], uniProtCode='', seqNote='', pAssigned=0.0):
+    def __init__(self, name='', numRes=0, seq='', Residues={}, uniProtCode='', seqNote='', pAssigned=0.0):
         self.name = str(name)
         self.numRes = int(numRes)
         self.seq = seq
@@ -26,25 +26,33 @@ class Molecule:
         """
         Describes the molecule (name, number of resiudes, any notes, sequence)
         """
-        print(f'\n{self.name}\n\tNumRes: {self.numRes}\n\tSequence note: {self.seqNote}\n\tSequence: {self.seq}')
+        print(f'{self.name}\n\tNumRes: {self.numRes}\n\tSequence note: {self.seqNote}\n\tSequence: {self.seq}')
 
     def initialise(self):
         """
         Creates a Residue object for every residue in the sequence of *this* construct (self.seq)
         Discrepencies with the full protein numbering (artefacts, fragments) are handled at the resiude level.
         """
-        c = 1						
+        c = 1
         for r in self.seq:
-            self.Residues.append(Residue(resDict_1to3[r],c,-1,{}))
+            self.Residues[c] = Residue(resDict_1to3[r],c,'',{})
             c += 1
+
+    def listResidues(self): 
+        """
+        Lists all the residues in the molecule  
+        """
+        for r in self.Residues:
+            res = self.Residues[r]
+            print(f'{res.num:^5}({res.realNum:^5}){res.name:^8}{len(res.Atoms)} atoms')
 
     def listAtoms(self): 
         """
         Lists all the atoms in the molecule  
         """
         for r in self.Residues:
-            r.describe()
-            r.listAtoms()
+            self.Residues[r].describe()
+            self.Residues[r].listAtoms()
 
 #    def countAtoms(self): 
 #        # counts all assigned atoms in the molecule
@@ -60,24 +68,34 @@ class Residue:
         self
         name        residue name                      str 
         num         residue number                    int 
-        realNum     real residue number (authSeqID)   int
+        realNum     real residue number (authSeqID)   str
                       should be the number from the full UniProt sequence
                       accounts for fragment nature / cloning artifacts
+                      Can be possibly '.' / 'NaN' / negative
         Atoms       atom objects for this residue     dict
                     
     """
 
-    def __init__(self, name, num=-1, realNum=-1, Atoms={}):
+    def __init__(self, name, num=-1, realNum='', Atoms={}):
         self.name = str(name)
         self.num = int(num)
-        self.realNum = int(realNum)
+        self.realNum = realNum
         self.Atoms= Atoms
 
     def describe(self):
         """
         Prints residue name, number and real number to screen
         """
-        print(f'Residue: {self.name:5} {self.num:5} ({self.realNum} in full protein)')
+        rNum = ''
+        try:
+            int(self.realNum)
+            rNum = self.realNum
+        except ValueError:
+            if len(self.Atoms) > 0:
+                rNum = '-'
+            else:
+                rNum = ''
+        print(f'Residue: {self.name:5} {self.num:5} (RealSeqID: {rNum})')
 
     def listAtoms(self):
         """
@@ -135,11 +153,6 @@ class Correlation:
         self.atype2 = atype2
         self.val1 = val1
         self.val2 = val2
-
-
-
-
-
 
 
 
