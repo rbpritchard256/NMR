@@ -35,19 +35,17 @@ def read_lines(cargo):
     r = ('end_reading', (f, fi,molecule))
     for line in fi:
 
-        if 'NMR_STAR_version' in line: # check version, currently only supports 3.1
+        if '__Entry.NMR_STAR_version' in line: # check version, currently only supports 3.1
             line = next(fi) # currently skips the detailed version
             version = get_info(line)
             if version != '3.1':
-                print("Closing.\nFile: '{}' is not NMR STAR version 3.1".format(f))
-                quit()
+                sys.exit("Closing.\nFile: '{}' is not NMR STAR version 3.1".format(f))
 
         if line.strip() == 'loop_': # indicates the start of a set of headers
             r = ('get_headers', (f, fi, molecule))
             break
 
         if '_Assembly.Number_of_components' in line: # check only one molecule in file
-            print(line.split()[1] )
             if line.split()[1] == '.': # this is sometimes used instead of 1, currently assuming they are equal
                 pass
             elif int(line.split()[1]) > 1:
@@ -99,27 +97,29 @@ def get_CS(cargo):
             break
         if inCS == True:
             tokens=line.split()
-            if len(tokens) != len(headers):
+            if len(tokens) == 0:
+                pass
+            elif len(tokens) != len(headers):
                 sys.exit(f'Error: There is an issue in the CS data, fewer entries than tokens for line: {line}')
-            rNum, rName = int(tokens[id_rNum]), tokens[id_rName]
-            aName, aType, CS = tokens[id_aName], tokens[id_aType], float(tokens[id_CS])
-            if molecule.Residues[rNum].name != rName:
-                sys.exit(f'Error: There is a discrepency between residue number in the CS list and the residue type in the 3-letter sequence in line:\n{line}')
-            if firstLine == True:
-                rNum_old = rNum
-                molecule.Residues[rNum].realNum = tokens[authResNum]
-                a = Atom(aName, aType, CS)
-                molecule.Residues[rNum].addAtom(a)
-                firstLine = False
-            elif rNum != rNum_old:
-                molecule.Residues[rNum].realNum = tokens[authResNum]
-                a = Atom(aName, aType, CS)
-                molecule.Residues[rNum].addAtom(a)
-                rNum_old = rNum
             else:
-                a = Atom(aName, aType, CS)
-                molecule.Residues[rNum].addAtom(a)
-
+                rNum, rName = int(tokens[id_rNum]), tokens[id_rName]
+                aName, aType, CS = tokens[id_aName], tokens[id_aType], float(tokens[id_CS])
+                if molecule.Residues[rNum].name != rName:
+                    sys.exit(f'Error: There is a discrepency between residue number in the CS list and the residue type in the 3-letter sequence in line:\n{line}')
+                if firstLine == True:
+                    rNum_old = rNum
+                    molecule.Residues[rNum].realNum = tokens[authResNum]
+                    a = Atom(aName, aType, CS)
+                    molecule.Residues[rNum].addAtom(a)
+                    firstLine = False
+                elif rNum != rNum_old:
+                    molecule.Residues[rNum].realNum = tokens[authResNum]
+                    a = Atom(aName, aType, CS)
+                    molecule.Residues[rNum].addAtom(a)
+                    rNum_old = rNum
+                else:
+                    a = Atom(aName, aType, CS)
+                    molecule.Residues[rNum].addAtom(a)
         else:
             break
     return ('read_lines',(f, fi, molecule))
@@ -174,12 +174,11 @@ def end_reading(cargo):
     return ('', (f,fi,molecule))
 
 def empty_file(f):
-    print("Closing.\nFile: '{}' is empty".format(f))
-    quit()
+    sys.exit("Closing.\nFile: '{}' is empty".format(f))
 
 def no_file(f):
     print("CLOSING: File: '{}' does not exist".format(f))
-    quit()
+    sys.exit()
 
 def parseBMRB(f): 
     # This is the actual program

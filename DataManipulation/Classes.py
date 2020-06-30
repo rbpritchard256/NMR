@@ -20,6 +20,10 @@ class Molecule:
         self.Residues = Residues
         self.uniProtCode = str(uniProtCode)
         self.seqNote = str(seqNote)
+        if self.numRes == 0 and self.seq != '':
+            self.numRes = len(self.seq)
+        if self.numRes != len(self.seq) and self.seq != '':
+            sys.exit(f'Error: number of residues doesn\'t match the sequence')
 #        self.pAssigned = pAssigned # not played with this yet
 
     def describe(self):
@@ -76,7 +80,7 @@ class Residue:
                     
     """
 
-    def __init__(self, name, num=-1, realNum='', Atoms={}):
+    def __init__(self, name, num=-999, realNum='', Atoms={}):
         self.name = str(name)
         self.num = int(num)
         self.realNum = realNum
@@ -123,18 +127,22 @@ class Atom:
     """
     Class object for atoms
         self
-        name        specific atom name          str 
+        name        specific atom name                      str 
                       eg C, CA, HG11
-        atype       atom type                   str 
-                      eg C, H, O
-        CS          chemical shift              float
+        atype       atom type                               str 
+                      eg C, H, O 
+        CS          assigned / average chemical shift       float
                 !!!   currently no note of referencing, CH/CD etc 
+        var         variation in CS                         float
+        CSlist      chemical shift                          tuple
     """
 
-    def __init__(self, name, atype, CS):
+    def __init__(self, name, atype, CS=-1, var=-1, CSlist=[]):
         self.name = name
         self.atype = atype
         self.CS = CS
+        self.var = var
+        self.CSlist = CSlist
 
     def describe(self):
         """
