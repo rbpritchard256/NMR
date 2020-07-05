@@ -108,19 +108,19 @@ def get_CS(cargo):
                     sys.exit(f'Error: There is a discrepency between residue number in the CS list and the residue type in the 3-letter sequence in line:\n{line}')
                 if firstLine == True:
                     rNum_old = rNum
-                    molecule.Residues[rNum].realNum = tokens[authResNum]
+                    molecule.Residues[rNum].realNum = int(tokens[authResNum])
                     a = Atom(aName, aType, CS)
                     molecule.Residues[rNum].addAtom(a)
                     firstLine = False
                 elif rNum != rNum_old:
-                    molecule.Residues[rNum].realNum = tokens[authResNum]
+                    molecule.Residues[rNum].realNum = int(tokens[authResNum])
                     a = Atom(aName, aType, CS)
                     molecule.Residues[rNum].addAtom(a)
                     rNum_old = rNum
                 else:
                     a = Atom(aName, aType, CS)
                     molecule.Residues[rNum].addAtom(a)
-        else:
+        else:`
             break
     return ('read_lines',(f, fi, molecule))
 

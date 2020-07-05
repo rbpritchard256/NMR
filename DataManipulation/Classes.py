@@ -126,7 +126,7 @@ class Residue:
         """
         Adds an atom object to the dictionary of atoms in a Residue
         """
-        self.Atoms[a.name] = a    
+        self.Atoms[a.name.upper()] = a    
 
 
 #    def checkExists(self, atoms):
