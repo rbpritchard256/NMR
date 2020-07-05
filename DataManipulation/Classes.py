@@ -152,8 +152,8 @@ class Atom:
     """
 
     def __init__(self, name, atype, CS=-1, var=-1, CSlist=None):
-        self.name = name
-        self.atype = atype
+        self.name = name.upper()
+        self.atype = atype.upper()
         self.CS = CS
         self.var = var
         if CSlist:
