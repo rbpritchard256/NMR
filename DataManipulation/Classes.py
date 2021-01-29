@@ -13,14 +13,26 @@ class Molecule:
         seqNote     Any other notes for this sequence/construct   str                    
     """
 
-    def __init__(self, name='', numRes=0, seq='', Residues={}, uniProtCode='', seqNote='', pAssigned=0.0):
+    #TO DO write internal checks for seq/numRes/Residues etc to be consistent
+
+    def __init__(self, name=None, numRes=0, seq=None, Residues=None, uniProtCode='', seqNote=''):
         self.name = str(name)
         self.numRes = int(numRes)
         self.seq = seq
-        self.Residues = Residues
+        if Residues:
+          self.Residues = Residues
+        else:
+          self.Residues = {}
         self.uniProtCode = str(uniProtCode)
+        if seq:
+          self.seq = seq
+        else:
+          self.seq = ''
         self.seqNote = str(seqNote)
-#        self.pAssigned = pAssigned # not played with this yet
+        if self.numRes == 0 and self.seq != '':
+            self.numRes = len(self.seq)
+        if self.numRes != len(self.seq) and self.seq != '':
+            sys.exit(f'Error: number of residues doesn\'t match the sequence')
 
     def describe(self):
         """
@@ -76,11 +88,17 @@ class Residue:
                     
     """
 
-    def __init__(self, name, num=-1, realNum='', Atoms={}):
+    def __init__(self, name, num, realNum=None, Atoms=None):
         self.name = str(name)
         self.num = int(num)
-        self.realNum = realNum
-        self.Atoms= Atoms
+        if realNum:
+          self.realNum = realNum
+        else:
+          self.realNum = None
+        if Atoms:
+          self.Residues = Atoms
+        else:
+          self.Atoms = {}
 
     def describe(self):
         """
@@ -108,7 +126,7 @@ class Residue:
         """
         Adds an atom object to the dictionary of atoms in a Residue
         """
-        self.Atoms[a.name] = a    
+        self.Atoms[a.name.upper()] = a    
 
 
 #    def checkExists(self, atoms):
@@ -123,18 +141,25 @@ class Atom:
     """
     Class object for atoms
         self
-        name        specific atom name          str 
+        name        specific atom name                      str 
                       eg C, CA, HG11
-        atype       atom type                   str 
-                      eg C, H, O
-        CS          chemical shift              float
+        atype       atom type                               str 
+                      eg C, H, O 
+        CS          assigned / average chemical shift       float
                 !!!   currently no note of referencing, CH/CD etc 
+        var         variation in CS                         float
+        CSlist      chemical shift                          tuple
     """
 
-    def __init__(self, name, atype, CS):
-        self.name = name
-        self.atype = atype
+    def __init__(self, name, atype, CS=-1, var=-1, CSlist=None):
+        self.name = name.upper()
+        self.atype = atype.upper()
         self.CS = CS
+        self.var = var
+        if CSlist:
+          self.CSlist = CSlist
+        else:
+          self.CSlist = []
 
     def describe(self):
         """

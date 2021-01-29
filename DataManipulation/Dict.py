@@ -4,3 +4,4 @@ resDict_3to1 = {'ALA': 'A', 'VAL': 'V', 'ILE': 'I', 'LEU': 'L', 'MET': 'M', 'PHE
 
 resDict_1toName = {'A': 'Alanine', 'V': 'Valine', 'I': 'Isoleucine', 'L': 'Leucine', 'M': 'Methionine', 'F': 'Phenylalanine', 'Y':'Tyrosine', 'W':'Tryptophan', 'R': 'Arginine', 'H': 'Histidine', 'K': 'Lysine', 'D': 'Asparagine', 'E': 'Glutamine', 'S': 'Serine', 'T': 'Threonine', 'N': 'Asparagine', 'Q': 'Glutamine', 'C': 'Cystine', 'G': 'Glycine', 'P': 'Proline'}
 
+atomType_atom = {'H':'H', 'HN':'H', 'N':'N', 'CA':'C', 'Ca':'C', 'C':'C', 'CO':'C'}
